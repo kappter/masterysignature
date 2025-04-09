@@ -1,1 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastery Signature</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Mastery Signature</h1>
+        <div id="form-section">
+            <form id="mastery-form">
+                <div class="question active" id="question-1">
+                    <h2>What are you mastering or in the process of mastering?</h2>
+                    <input type="text" id="mastery-topic" name="mastery-topic" required>
+                </div>
 
+                <div class="question" id="question-2">
+                    <h2>How long have you spent working on this mastery?</h2>
+                    <select name="q1" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="1">Days</option>
+                        <option value="2">Hours</option>
+                        <option value="3">Weeks</option>
+                        <option value="4">Months</option>
+                        <option value="5">Years</option>
+                        <option value="6">Decades</option>
+                        <option value="7">I Never Stop</option>
+                    </select>
+                </div>
+
+                <div class="question" id="question-3">
+                    <h2>General Education: What is already known about this topic?</h2>
+                    <select name="q2" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="1">Days</option>
+                        <option value="2">Hours</option>
+                        <option value="3">Weeks</option>
+                        <option value="4">Months</option>
+                        <option value="5">Years</option>
+                        <option value="6">Decades</option>
+                        <option value="7">I Never Stop</option>
+                    </select>
+                </div>
+
+                <div class="question" id="question-4">
+                    <h2>Experience: Have you done volunteering, internships, working, etc.?</h2>
+                    <select name="q3" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="1">Days</option>
+                        <option value="2">Hours</option>
+                        <option value="3">Weeks</option>
+                        <option value="4">Months</option>
+                        <option value="5">Years</option>
+                        <option value="6">Decades</option>
+                        <option value="7">I Never Stop</option>
+                    </select>
+                </div>
+
+                <div class="question" id="question-5">
+                    <h2>Sharing: Have you done tutoring, teaching, speaking, etc.?</h2>
+                    <select name="q4" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="1">Days</option>
+                        <option value="2">Hours</option>
+                        <option value="3">Weeks</option>
+                        <option value="4">Months</option>
+                        <option value="5">Years</option>
+                        <option value="6">Decades</option>
+                        <option value="7">I Never Stop</option>
+                    </select>
+                </div>
+
+                <div class="question" id="question-6">
+                    <h2>Amalgamating: Have you done research, systems, complex overviews, etc.?</h2>
+                    <select name="q5" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="1">Days</option>
+                        <option value="2">Hours</option>
+                        <option value="3">Weeks</option>
+                        <option value="4">Months</option>
+                        <option value="5">Years</option>
+                        <option value="6">Decades</option>
+                        <option value="7">I Never Stop</option>
+                    </select>
+                </div>
+
+                <div class="question" id="question-7">
+                    <h2>Contributing: Have you published titles?</h2>
+                    <select name="q6" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="1">Days</option>
+                        <option value="2">Hours</option>
+                        <option value="3">Weeks</option>
+                        <option value="4">Months</option>
+                        <option value="5">Years</option>
+                        <option value="6">Decades</option>
+                        <option value="7">I Never Stop</option>
+                    </select>
+                </div>
+
+                <div class="question" id="question-8">
+                    <h2>Next Thing: Have you made a new thing?</h2>
+                    <select name="q7" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="1">Days</option>
+                        <option value="2">Hours</option>
+                        <option value="3">Weeks</option>
+                        <option value="4">Months</option>
+                        <option value="5">Years</option>
+                        <option value="6">Decades</option>
+                        <option value="7">I Never Stop</option>
+                    </select>
+                </div>
+
+                <div class="navigation">
+                    <button type="button" id="prev-btn" disabled>Previous</button>
+                    <button type="button" id="next-btn">Next</button>
+                    <button type="submit" id="submit-btn" style="display: none;">Submit</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="result-section" style="display: none;">
+            <h2>Your Mastery Signature</h2>
+            <p>You are mastering: <span id="result-topic"></span></p>
+            <p>Current Mastery Level: <span id="result-level"></span></p>
+            <div class="infinity-symbol">
+                <div class="path"></div>
+                <div class="marker" id="level-marker"></div>
+                <div class="label level-1">1</div>
+                <div class="label level-2">2</div>
+                <div class="label level-3">3</div>
+                <div class="label level-4">4</div>
+                <div class="label level-5">5</div>
+                <div class="label level-6">6</div>
+                <div class="label level-7">7</div>
+            </div>
+            <h3>Future Projections</h3>
+            <p>In 1 year: Level <span id="proj-1-year"></span></p>
+            <p>In 5 years: Level <span id="proj-5-years"></span></p>
+            <p>In 10 years: Level <span id="proj-10-years"></span></p>
+            <p>In 25 years: Level <span id="proj-25-years"></span></p>
+            <p>In 50 years: Level <span id="proj-50-years"></span></p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
