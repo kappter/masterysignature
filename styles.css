@@ -1,0 +1,118 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    color: #333;
+}
+
+.question {
+    display: none;
+}
+
+.question.active {
+    display: block;
+}
+
+select, input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.navigation {
+    margin-top: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    border: none;
+    border-radius: 4px;
+    background-color: #007BFF;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+/* Infinity Symbol Styling */
+.infinity-symbol {
+    position: relative;
+    width: 300px;
+    height: 150px;
+    margin: 20px auto;
+}
+
+.path {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: 4px solid #007BFF;
+    border-radius: 50% 50% 50% 50% / 100% 100% 0% 0%;
+    transform: rotate(45deg);
+    clip-path: polygon(0% 0%, 50% 0%, 50% 50%, 100% 50%, 100% 100%, 50% 100%, 50% 50%, 0% 50%);
+}
+
+.path::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 4px solid #007BFF;
+    border-radius: 50% 50% 50% 50% / 0% 0% 100% 100%;
+    transform: rotate(90deg);
+    clip-path: polygon(0% 0%, 50% 0%, 50% 50%, 100% 50%, 100% 100%, 50% 100%, 50% 50%, 0% 50%);
+}
+
+.marker {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: red;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.label {
+    position: absolute;
+    font-size: 14px;
+    color: #333;
+}
+
+.level-1 { top: 10%; left: 10%; }
+.level-2 { top: 30%; left: 30%; }
+.level-3 { top: 50%; left: 50%; }
+.level-4 { top: 70%; left: 70%; }
+.level-5 { top: 70%; left: 30%; }
+.level-6 { top: 30%; left: 70%; }
+.level-7 { top: 90%; left: 50%; }
