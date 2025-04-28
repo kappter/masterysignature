@@ -72,12 +72,12 @@ button {
     cursor: not-allowed;
 }
 
-#next-btn, #submit-btn {
+#next-btn, #submit-btn, #download-btn, #copy-btn {
     background-color: #007BFF;
     color: white;
 }
 
-#next-btn:hover, #submit-btn:hover {
+#next-btn:hover, #submit-btn:hover, #download-btn:hover, #copy-btn:hover {
     background-color: #0056b3;
 }
 
@@ -88,4 +88,11 @@ button {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
+}
+
+.canvas-actions {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }

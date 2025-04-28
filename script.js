@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultSection = document.getElementById('result-section');
     const previewCanvas = document.getElementById('preview-canvas');
     const masteryCanvas = document.getElementById('mastery-canvas');
+    const downloadBtn = document.getElementById('download-btn');
+    const copyBtn = document.getElementById('copy-btn');
     const previewCtx = previewCanvas.getContext('2d');
     const masteryCtx = masteryCanvas.getContext('2d');
     let currentQuestion = 0;
@@ -42,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     nextBtn.addEventListener('click', () => {
-        const currentInputs = questions[currentQuestion].querySelectorAll('select');
+        const currentInputs = questions[currentQuestion].querySelectorAll('select, input');
         if (Array.from(currentInputs).every(input => input.value)) {
             if (currentQuestion < questions.length - 1) {
                 // Store the current answers
@@ -68,47 +70,39 @@ document.addEventListener('DOMContentLoaded', () => {
         const height = previewCanvas.height;
         previewCtx.clearRect(0, 0, width, height);
 
-        // Center of the canvas
         const centerX = width / 2;
         const centerY = height / 2;
         const radius = 80;
 
-        // Calculate current level based on answered questions
-        const answeredTimes = answers.times.slice(0, currentQuestion - 1);
-        const total = answeredTimes.reduce((sum, val) => sum + val, 0);
-        const averageLevel = answeredTimes.length ? Math.round(total / answeredTimes.length) : 0;
-
         // Calculate segment lengths
-        const totalPoints = answeredTimes.reduce((sum, val) => sum + val, 0) || 1; // Avoid division by zero
-        const segmentLengths = answeredTimes.map(val => (val / totalPoints) * 100);
+        const totalPoints = answers.times.reduce((sum, val) => sum + val, 0) || 1;
+        const segmentLengths = answers.times.map(val => (val / totalPoints) * 100);
 
         // Determine if it's a circle or infinity symbol
-        const hasHigherLevels = answeredTimes.some((time, idx) => idx >= 3 && time > 0);
-        const totalLength = (averageLevel <= 3 || !hasHigherLevels) ? 2 * Math.PI * radius : 4 * Math.PI * radius;
-        const segments = segmentLengths.map(len => (len / 100) * totalLength);
+        const hasHigherLevels = answers.times.some((time, idx) => idx >= 3 && time > 0);
 
         previewCtx.save();
         previewCtx.translate(centerX, centerY);
 
-        if (averageLevel <= 3 || !hasHigherLevels) {
+        if (!hasHigherLevels) {
             // Draw a circle
             let startAngle = 0;
-            for (let i = 0; i < segments.length; i++) {
-                if (answeredTimes[i] === 0) continue; // Skip zero-length segments
-                const segmentAngle = (segments[i] / totalLength) * 2 * Math.PI;
+            for (let i = 0; i < answers.times.length; i++) {
+                if (answers.times[i] === 0) continue;
+                const segmentAngle = (segmentLengths[i] / 100) * 2 * Math.PI;
                 previewCtx.beginPath();
                 previewCtx.arc(0, 0, radius, startAngle, startAngle + segmentAngle);
-                previewCtx.lineWidth = 10 * (answers.difficulties[i] / 5); // Thickness based on difficulty
+                previewCtx.lineWidth = 10 * (answers.difficulties[i] / 5);
                 previewCtx.strokeStyle = chakraColors[i];
-                previewCtx.lineCap = 'butt';
+                previewCtx.lineCap = 'round';
                 previewCtx.stroke();
                 startAngle += segmentAngle;
             }
         } else {
             // Draw an infinity symbol
-            let currentLength = 0;
-            const totalPathLength = 4 * Math.PI * radius;
             const numPoints = 360;
+            let currentLength = 0;
+            const totalPathLength = 2 * Math.PI * radius * 2; // Approximate length for infinity symbol
             const step = totalPathLength / numPoints;
 
             for (let i = 0; i < numPoints; i++) {
@@ -120,30 +114,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 const nextX = radius * Math.cos(nextT);
                 const nextY = radius * Math.sin(nextT) * Math.sin(nextT / 2);
 
-                // Determine which segment this point falls into
                 currentLength += Math.sqrt((nextX - x) ** 2 + (nextY - y) ** 2);
                 let segmentIndex = 0;
                 let accumulatedLength = 0;
-                for (let j = 0; j < segments.length; j++) {
-                    accumulatedLength += segments[j];
-                    if (currentLength <= accumulatedLength && answeredTimes[j] > 0) {
+                for (let j = 0; j < segmentLengths.length; j++) {
+                    accumulatedLength += (segmentLengths[j] / 100) * totalPathLength;
+                    if (currentLength <= accumulatedLength && answers.times[j] > 0) {
                         segmentIndex = j;
                         break;
                     }
                 }
 
-                if (answeredTimes[segmentIndex] === 0) continue;
+                if (answers.times[segmentIndex] === 0) continue;
 
                 previewCtx.beginPath();
                 previewCtx.moveTo(x, y);
                 previewCtx.lineTo(nextX, nextY);
                 previewCtx.lineWidth = 10 * (answers.difficulties[segmentIndex] / 5);
                 previewCtx.strokeStyle = chakraColors[segmentIndex];
-                previewCtx.lineCap = 'butt';
+                previewCtx.lineCap = 'round';
                 previewCtx.stroke();
             }
-        }
-
+ mieszkowski
         previewCtx.restore();
     }
 
@@ -177,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Determine if user is a Tier One Candidate
         const hasHigherLevels = times.slice(3).some(time => time > 0);
-        const tier = (averageLevel <= 3 || !hasHigherLevels) ? 'Tier One Candidate' : 'Advanced Learner';
+        const tier = (!hasHigherLevels) ? 'Tier One Candidate' : 'Advanced Learner';
 
         // Display results
         formSection.style.display = 'none';
@@ -216,31 +208,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const centerY = height / 2;
         const radius = 80;
 
-        const totalLength = (level <= 3 || !hasHigherLevels) ? 2 * Math.PI * radius : 4 * Math.PI * radius;
-        const segments = segmentLengths.map(len => (len / 100) * totalLength);
-
         masteryCtx.save();
         masteryCtx.translate(centerX, centerY);
 
-        if (level <= 3 || !hasHigherLevels) {
+        if (!hasHigherLevels) {
             // Draw a circle
             let startAngle = 0;
-            for (let i = 0; i < segments.length; i++) {
-                if (segments[i] === 0) continue;
-                const segmentAngle = (segments[i] / totalLength) * 2 * Math.PI;
+            for (let i = 0; i < segmentLengths.length; i++) {
+                if (times[i] === 0) continue;
+                const segmentAngle = (segmentLengths[i] / 100) * 2 * Math.PI;
                 masteryCtx.beginPath();
                 masteryCtx.arc(0, 0, radius, startAngle, startAngle + segmentAngle);
                 masteryCtx.lineWidth = 10 * (difficulties[i] / 5);
                 masteryCtx.strokeStyle = chakraColors[i];
-                masteryCtx.lineCap = 'butt';
+                masteryCtx.lineCap = 'round';
                 masteryCtx.stroke();
                 startAngle += segmentAngle;
             }
         } else {
             // Draw an infinity symbol
-            let currentLength = 0;
-            const totalPathLength = 4 * Math.PI * radius;
             const numPoints = 360;
+            let currentLength = 0;
+            const totalPathLength = 2 * Math.PI * radius * 2;
             const step = totalPathLength / numPoints;
 
             for (let i = 0; i < numPoints; i++) {
@@ -255,28 +244,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentLength += Math.sqrt((nextX - x) ** 2 + (nextY - y) ** 2);
                 let segmentIndex = 0;
                 let accumulatedLength = 0;
-                for (let j = 0; j < segments.length; j++) {
-                    accumulatedLength += segments[j];
-                    if (currentLength <= accumulatedLength && segments[j] > 0) {
+                for (let j = 0; j < segmentLengths.length; j++) {
+                    accumulatedLength += (segmentLengths[j] / 100) * totalPathLength;
+                    if (currentLength <= accumulatedLength && times[j] > 0) {
                         segmentIndex = j;
                         break;
                     }
                 }
 
-                if (segments[segmentIndex] === 0) continue;
+                if (times[segmentIndex] === 0) continue;
 
                 masteryCtx.beginPath();
                 masteryCtx.moveTo(x, y);
                 masteryCtx.lineTo(nextX, nextY);
                 masteryCtx.lineWidth = 10 * (difficulties[segmentIndex] / 5);
                 masteryCtx.strokeStyle = chakraColors[segmentIndex];
-                masteryCtx.lineCap = 'butt';
+                masteryCtx.lineCap = 'round';
                 masteryCtx.stroke();
             }
         }
 
         masteryCtx.restore();
     }
+
+    // Download canvas as image
+    downloadBtn.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'mastery-signature.png';
+        link.href = masteryCanvas.toDataURL('image/png');
+        link.click();
+    });
+
+    // Copy canvas to clipboard
+    copyBtn.addEventListener('click', () => {
+        masteryCanvas.toBlob((blob) => {
+            const item = new ClipboardItem({ 'image/png': blob });
+            navigator.clipboard.write([item]).then(() => {
+                alert('Mastery Signature copied to clipboard!');
+            }).catch((err) => {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy to clipboard.');
+            });
+        });
+    });
 
     // Initialize first question
     showQuestion(currentQuestion);
