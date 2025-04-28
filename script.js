@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 previewCtx.lineCap = 'round';
                 previewCtx.stroke();
             }
- mieszkowski
+        }
         previewCtx.restore();
     }
 
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const segmentLengths = times.map(val => (val / totalPoints) * 100);
 
         // Draw the final mastery symbol
-        drawMasterySymbol(averageLevel, segmentLengths, difficulties, hasHigherLevels);
+        drawMasterySymbol(averageLevel, segmentLengths, difficulties, hasHigherLevels, times);
 
         // Future projections
         const projectLevel = (years) => {
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Function to draw the final mastery symbol
-    function drawMasterySymbol(level, segmentLengths, difficulties, hasHigherLevels) {
+    function drawMasterySymbol(level, segmentLengths, difficulties, hasHigherLevels, times) {
         const width = masteryCanvas.width;
         const height = masteryCanvas.height;
         masteryCtx.clearRect(0, 0, width, height);
