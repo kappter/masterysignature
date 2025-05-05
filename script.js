@@ -64,79 +64,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Function to draw the preview as the user answers
+    // Function to draw the preview as a horizontal line
     function drawPreview() {
         const width = previewCanvas.width;
         const height = previewCanvas.height;
         previewCtx.clearRect(0, 0, width, height);
 
-        const centerX = width / 2;
-        const centerY = height / 2;
-        const radius = 80;
+        const totalLineLength = 960; // Total length of the line in pixels
+        const startX = (width - totalLineLength) / 2; // Center the line horizontally
+        const y = height / 2; // Center vertically
 
         // Calculate segment lengths
         const totalPoints = answers.times.reduce((sum, val) => sum + val, 0) || 1;
-        const segmentLengths = answers.times.map(val => (val / totalPoints) * 100);
+        const segmentLengths = answers.times.map(val => (val / totalPoints) * totalLineLength);
 
-        // Determine if it's a circle or infinity symbol
-        const hasHigherLevels = answers.times.some((time, idx) => idx >= 3 && time > 0);
-
-        previewCtx.save();
-        previewCtx.translate(centerX, centerY);
-
-        if (!hasHigherLevels) {
-            // Draw a circle
-            let startAngle = 0;
-            for (let i = 0; i < answers.times.length; i++) {
-                if (answers.times[i] === 0) continue;
-                const segmentAngle = (segmentLengths[i] / 100) * 2 * Math.PI;
-                previewCtx.beginPath();
-                previewCtx.arc(0, 0, radius, startAngle, startAngle + segmentAngle);
-                previewCtx.lineWidth = 10 * (answers.difficulties[i] / 5);
-                previewCtx.strokeStyle = chakraColors[i];
-                previewCtx.lineCap = 'round';
-                previewCtx.stroke();
-                startAngle += segmentAngle;
-            }
-        } else {
-            // Draw an infinity symbol
-            const numPoints = 360;
-            let currentLength = 0;
-            const totalPathLength = 2 * Math.PI * radius * 2; // Approximate length for infinity symbol
-            const step = totalPathLength / numPoints;
-
-            for (let i = 0; i < numPoints; i++) {
-                const t = (i / numPoints) * 2 * Math.PI;
-                const x = radius * Math.cos(t);
-                const y = radius * Math.sin(t) * Math.sin(t / 2);
-
-                const nextT = ((i + 1) / numPoints) * 2 * Math.PI;
-                const nextX = radius * Math.cos(nextT);
-                const nextY = radius * Math.sin(nextT) * Math.sin(nextT / 2);
-
-                currentLength += Math.sqrt((nextX - x) ** 2 + (nextY - y) ** 2);
-                let segmentIndex = 0;
-                let accumulatedLength = 0;
-                for (let j = 0; j < segmentLengths.length; j++) {
-                    accumulatedLength += (segmentLengths[j] / 100) * totalPathLength;
-                    if (currentLength <= accumulatedLength && answers.times[j] > 0) {
-                        segmentIndex = j;
-                        break;
-                    }
-                }
-
-                if (answers.times[segmentIndex] === 0) continue;
-
-                previewCtx.beginPath();
-                previewCtx.moveTo(x, y);
-                previewCtx.lineTo(nextX, nextY);
-                previewCtx.lineWidth = 10 * (answers.difficulties[segmentIndex] / 5);
-                previewCtx.strokeStyle = chakraColors[segmentIndex];
-                previewCtx.lineCap = 'round';
-                previewCtx.stroke();
-            }
+        // Draw horizontal line segments
+        let currentX = startX;
+        for (let i = 0; i < answers.times.length; i++) {
+            if (answers.times[i] === 0) continue;
+            const segmentLength = segmentLengths[i];
+            previewCtx.beginPath();
+            previewCtx.moveTo(currentX, y);
+            previewCtx.lineTo(currentX + segmentLength, y);
+            previewCtx.lineWidth = 10 * (answers.difficulties[i] / 5); // Thickness based on difficulty
+            previewCtx.strokeStyle = chakraColors[i];
+            previewCtx.lineCap = 'butt'; // Flat ends for clean segment joins
+            previewCtx.stroke();
+            currentX += segmentLength;
         }
-        previewCtx.restore();
     }
 
     // Form submission and result calculation
@@ -180,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Calculate segment lengths
         const totalPoints = times.reduce((sum, val) => sum + val, 0) || 1;
-        const segmentLengths = times.map(val => (val / totalPoints) * 100);
+        const segmentLengths = times.map(val => (val / totalPoints) * 960);
 
         // Draw the final mastery symbol
         drawMasterySymbol(averageLevel, segmentLengths, difficulties, hasHigherLevels, times);
@@ -198,73 +153,30 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('proj-50-years').textContent = projectLevel(50);
     });
 
-    // Function to draw the final mastery symbol
+    // Function to draw the final mastery symbol as a horizontal line
     function drawMasterySymbol(level, segmentLengths, difficulties, hasHigherLevels, times) {
         const width = masteryCanvas.width;
         const height = masteryCanvas.height;
         masteryCtx.clearRect(0, 0, width, height);
 
-        const centerX = width / 2;
-        const centerY = height / 2;
-        const radius = 80;
+        const totalLineLength = 960; // Total length of the line in pixels
+        const startX = (width - totalLineLength) / 2; // Center the line horizontally
+        const y = height / 2; // Center vertically
 
-        masteryCtx.save();
-        masteryCtx.translate(centerX, centerY);
-
-        if (!hasHigherLevels) {
-            // Draw a circle
-            let startAngle = 0;
-            for (let i = 0; i < segmentLengths.length; i++) {
-                if (times[i] === 0) continue;
-                const segmentAngle = (segmentLengths[i] / 100) * 2 * Math.PI;
-                masteryCtx.beginPath();
-                masteryCtx.arc(0, 0, radius, startAngle, startAngle + segmentAngle);
-                masteryCtx.lineWidth = 10 * (difficulties[i] / 5);
-                masteryCtx.strokeStyle = chakraColors[i];
-                masteryCtx.lineCap = 'round';
-                masteryCtx.stroke();
-                startAngle += segmentAngle;
-            }
-        } else {
-            // Draw an infinity symbol
-            const numPoints = 360;
-            let currentLength = 0;
-            const totalPathLength = 2 * Math.PI * radius * 2;
-            const step = totalPathLength / numPoints;
-
-            for (let i = 0; i < numPoints; i++) {
-                const t = (i / numPoints) * 2 * Math.PI;
-                const x = radius * Math.cos(t);
-                const y = radius * Math.sin(t) * Math.sin(t / 2);
-
-                const nextT = ((i + 1) / numPoints) * 2 * Math.PI;
-                const nextX = radius * Math.cos(nextT);
-                const nextY = radius * Math.sin(nextT) * Math.sin(nextT / 2);
-
-                currentLength += Math.sqrt((nextX - x) ** 2 + (nextY - y) ** 2);
-                let segmentIndex = 0;
-                let accumulatedLength = 0;
-                for (let j = 0; j < segmentLengths.length; j++) {
-                    accumulatedLength += (segmentLengths[j] / 100) * totalPathLength;
-                    if (currentLength <= accumulatedLength && times[j] > 0) {
-                        segmentIndex = j;
-                        break;
-                    }
-                }
-
-                if (times[segmentIndex] === 0) continue;
-
-                masteryCtx.beginPath();
-                masteryCtx.moveTo(x, y);
-                masteryCtx.lineTo(nextX, nextY);
-                masteryCtx.lineWidth = 10 * (difficulties[segmentIndex] / 5);
-                masteryCtx.strokeStyle = chakraColors[segmentIndex];
-                masteryCtx.lineCap = 'round';
-                masteryCtx.stroke();
-            }
+        // Draw horizontal line segments
+        let currentX = startX;
+        for (let i = 0; i < times.length; i++) {
+            if (times[i] === 0) continue;
+            const segmentLength = segmentLengths[i];
+            masteryCtx.beginPath();
+            masteryCtx.moveTo(currentX, y);
+            masteryCtx.lineTo(currentX + segmentLength, y);
+            masteryCtx.lineWidth = 10 * (difficulties[i] / 5); // Thickness based on difficulty
+            masteryCtx.strokeStyle = chakraColors[i];
+            masteryCtx.lineCap = 'butt'; // Flat ends for clean segment joins
+            masteryCtx.stroke();
+            currentX += segmentLength;
         }
-
-        masteryCtx.restore();
     }
 
     // Download canvas as image
