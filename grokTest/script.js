@@ -16,15 +16,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentQuestion = 0;
     let answers = { times: [], difficulties: [] };
 
-    // Chakra colors for each level
-    const chakraColors = [
-        '#FF0000', // Red (Level 1)
-        '#FF4500', // Orange (Level 2)
-        '#FFFF00', // Yellow (Level 3)
-        '#00FF00', // Green (Level 4)
-        '#0000FF', // Blue (Level 5)
-        '#4B0082', // Indigo (Level 6)
-        '#EE82EE'  // Violet (Level 7)
+    // Earth tone colors for each level
+    const earthTones = [
+        '#F5F5DC', // Sandy Beige (Level 1)
+        '#E2725B', // Terracotta (Level 2)
+        '#808000', // Olive Green (Level 3)
+        '#8B4513', // Earth Brown (Level 4)
+        '#228B22', // Forest Green (Level 5)
+        '#708090', // Stone Gray (Level 6)
+        '#5C4033'  // Deep Clay (Level 7)
     ];
 
     // Pagination logic
@@ -63,49 +63,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Function to draw the preview as an evolving loop
+    // Function to draw the preview as a simplified mountain range
     function drawPreview() {
         const width = previewCanvas.width;
         const height = previewCanvas.height;
         previewCtx.clearRect(0, 0, width, height);
 
-        const centerX = width / 2;
-        const centerY = height / 2;
-        const baseRadius = 50;
-        const totalPoints = answers.times.reduce((sum, val) => sum + val, 0) || 1;
-        let startAngle = 0;
+        // Background sky
+        previewCtx.fillStyle = '#E6E6FA'; // Light lavender sky
+        previewCtx.fillRect(0, 0, width, height);
+
+        const peakWidth = width / 7; // Divide canvas into 7 sections for preview
+        const baseY = height - 20;
 
         for (let i = 0; i < answers.times.length; i++) {
             if (answers.times[i] === 0) continue;
-            const proportion = answers.times[i] / totalPoints;
-            const angleSpan = proportion * 2 * Math.PI;
-            const radius = baseRadius + (answers.difficulties[i] * 5);
+            const time = answers.times[i];
+            const difficulty = answers.difficulties[i];
+            const peakHeight = (time / 500) * (height - 40); // Scale height by time (max 500)
+            const peakBaseWidth = difficulty * 10; // Scale width by difficulty
+
+            const x = i * peakWidth + peakWidth / 2;
             previewCtx.beginPath();
-            previewCtx.moveTo(centerX + Math.cos(startAngle) * radius, centerY + Math.sin(startAngle) * radius);
-            const controlOffset = radius * 0.5;
-            previewCtx.quadraticCurveTo(
-                centerX + Math.cos(startAngle + angleSpan / 2) * controlOffset,
-                centerY + Math.sin(startAngle + angleSpan / 2) * controlOffset,
-                centerX + Math.cos(startAngle + angleSpan) * radius,
-                centerY + Math.sin(startAngle + angleSpan) * radius
-            );
-            previewCtx.lineWidth = 5 + (answers.difficulties[i] * 2);
-            previewCtx.strokeStyle = chakraColors[i];
+            previewCtx.moveTo(x - peakBaseWidth, baseY);
+            previewCtx.lineTo(x, baseY - peakHeight);
+            previewCtx.lineTo(x + peakBaseWidth, baseY);
+            previewCtx.closePath();
+            previewCtx.fillStyle = earthTones[i];
+            previewCtx.fill();
+            previewCtx.strokeStyle = '#333';
+            previewCtx.lineWidth = 1;
             previewCtx.stroke();
-            startAngle += angleSpan;
         }
     }
 
     // Function to map average time to a 1-7 scale
     function mapToMasteryLevel(averageTime) {
         if (averageTime === 0) return 0;
-        if (averageTime <= 10) return 1;   // Up to "1-5 hours" or "Days"
-        if (averageTime <= 50) return 2;   // Up to "10-20 hours" or "Months"
-        if (averageTime <= 100) return 3;  // Up to "1-2 Years"
-        if (averageTime <= 200) return 4;  // Up to "2-5 Years"
-        if (averageTime <= 300) return 5;  // Intermediate progress
-        if (averageTime <= 400) return 6;  // High progress
-        return 7;                          // Max progress (e.g., "5+ Years" = 500)
+        if (averageTime <= 10) return 1;
+        if (averageTime <= 50) return 2;
+        if (averageTime <= 100) return 3;
+        if (averageTime <= 200) return 4;
+        if (averageTime <= 300) return 5;
+        if (averageTime <= 400) return 6;
+        return 7;
     }
 
     // Form submission and result calculation
@@ -148,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('result-level').textContent = masteryProgressScore;
         document.getElementById('result-tier').textContent = tier;
 
-        // Calculate segment proportions
+        // Calculate segment proportions (not used directly for mountains)
         const totalPoints = times.reduce((sum, val) => sum + val, 0) || 1;
         const segmentProportions = times.map(val => (val / totalPoints) * 2 * Math.PI);
 
@@ -158,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Future projections
         const projectLevel = (years) => {
             const growthRate = 0.1;
-            const projectedTime = averageTime + (growthRate * years * 100); // Scale growth
+            const projectedTime = averageTime + (growthRate * years * 100);
             return Math.min(7, mapToMasteryLevel(Math.round(projectedTime)));
         };
 
@@ -175,115 +176,83 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('next-steps').textContent = nextSteps;
     });
 
-    // Function to draw the final mastery symbol
+    // Function to draw the final mastery symbol as a mountain range
     function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times) {
         const width = masteryCanvas.width;
         const height = masteryCanvas.height;
         masteryCtx.clearRect(0, 0, width, height);
 
-        const centerX = width / 2;
-        const centerY = height / 2;
-        const baseSize = 100;
+        // Background sky
+        masteryCtx.fillStyle = '#E6E6FA'; // Light lavender sky
+        masteryCtx.fillRect(0, 0, width, height);
+
+        // Ground baseline
+        const baseY = height - 50;
+        masteryCtx.fillStyle = '#D2B48C'; // Tan ground
+        masteryCtx.fillRect(0, baseY, width, 50);
+
+        const peakWidth = width / 7; // Divide canvas into 7 sections
+        const maxHeight = height - 100; // Max height for peaks
 
         // Check for ample time past Level 4
         const ampleTimePastLevel4 = times.slice(4).reduce((sum, val) => sum + val, 0) > 100;
 
-        if (ampleTimePastLevel4) {
-            let totalProportion = segmentProportions.reduce((sum, val) => sum + val, 0);
-            let currentAngle = 0;
+        // Draw each peak (mountain) for each level
+        for (let i = 0; i < times.length; i++) {
+            const time = times[i];
+            if (time === 0) continue;
+            const difficulty = difficulties[i];
+            const peakHeight = (time / 500) * maxHeight; // Scale height by time
+            const peakBaseWidth = difficulty * 15; // Scale width by difficulty
 
-            const maxDifficultyIndex = difficulties.indexOf(Math.max(...difficulties));
-            const rotationAngle = -Math.PI / 2 + (maxDifficultyIndex * 2 * Math.PI / 7);
+            const x = i * peakWidth + peakWidth / 2;
+            masteryCtx.beginPath();
+            masteryCtx.moveTo(x - peakBaseWidth, baseY);
+            masteryCtx.lineTo(x, baseY - peakHeight);
+            masteryCtx.lineTo(x + peakBaseWidth, baseY);
+            masteryCtx.closePath();
+            masteryCtx.fillStyle = earthTones[i];
+            masteryCtx.fill();
+            masteryCtx.strokeStyle = '#333';
+            masteryCtx.lineWidth = 1;
+            masteryCtx.stroke();
 
-            for (let i = 0; i < times.length; i++) {
-                if (times[i] === 0) continue;
-                const proportion = segmentProportions[i] / totalProportion * 2 * Math.PI;
-                const size = baseSize + (difficulties[i] * 10);
-                const thickness = 10 + (difficulties[i] * 5);
-
-                masteryCtx.save();
-                masteryCtx.translate(centerX, centerY);
-                masteryCtx.rotate(rotationAngle);
-
-                masteryCtx.beginPath();
-                const tSteps = 100;
-                for (let t = 0; t <= tSteps; t++) {
-                    const tParam = (t / tSteps) * proportion + currentAngle;
-                    const r = size * Math.sqrt(2) * Math.cos(tParam) / (Math.sin(tParam) * Math.sin(tParam) + 1);
-                    const x = r * Math.cos(tParam);
-                    const y = r * Math.sin(tParam);
-                    if (t === 0) masteryCtx.moveTo(x, y);
-                    else masteryCtx.lineTo(x, y);
-                }
-                masteryCtx.closePath();
-                masteryCtx.lineWidth = thickness;
-                masteryCtx.strokeStyle = chakraColors[i];
-                masteryCtx.stroke();
-
-                const labelAngle = currentAngle + proportion / 2;
-                const labelX = size * Math.cos(labelAngle + rotationAngle);
-                const labelY = size * Math.sin(labelAngle + rotationAngle);
-                masteryCtx.fillStyle = chakraColors[i];
-                masteryCtx.font = '14px Arial';
-                masteryCtx.textAlign = 'center';
-                masteryCtx.textBaseline = 'middle';
-                masteryCtx.fillText(`Level ${i + 1}`, labelX, labelY);
-
-                currentAngle += proportion;
-                masteryCtx.restore();
-            }
-
-            masteryCtx.save();
-            masteryCtx.translate(centerX, centerY);
-            masteryCtx.rotate(rotationAngle);
+            // Add label below the peak
             masteryCtx.fillStyle = '#333';
-            masteryCtx.font = '24px Arial';
+            masteryCtx.font = '14px Arial';
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
-            masteryCtx.fillText(`Mastery Progress: ${level}`, 0, 0);
-            masteryCtx.restore();
-        } else {
-            let startAngle = 0;
-            for (let i = 0; i < times.length; i++) {
-                if (times[i] === 0) continue;
-                const proportion = segmentProportions[i];
-                const radius = baseSize + (difficulties[i] * 10);
-                const complexity = i + 1;
-                masteryCtx.beginPath();
-                let x = centerX + Math.cos(startAngle) * radius;
-                let y = centerY + Math.sin(startAngle) * radius;
-                masteryCtx.moveTo(x, y);
-                for (let j = 0; j < complexity; j++) {
-                    const controlOffset = radius * 0.3 * (j + 1);
-                    const midAngle = startAngle + (proportion * (j + 0.5) / complexity);
-                    masteryCtx.quadraticCurveTo(
-                        centerX + Math.cos(midAngle) * controlOffset,
-                        centerY + Math.sin(midAngle) * controlOffset,
-                        centerX + Math.cos(startAngle + proportion / complexity * (j + 1)) * radius,
-                        centerY + Math.sin(startAngle + proportion / complexity * (j + 1)) * radius
-                    );
-                }
-                masteryCtx.lineWidth = 10 + (difficulties[i] * 5);
-                masteryCtx.strokeStyle = chakraColors[i];
-                masteryCtx.stroke();
-
-                const labelAngle = startAngle + proportion / 2;
-                const labelX = centerX + (radius + 20) * Math.cos(labelAngle);
-                const labelY = centerY + (radius + 20) * Math.sin(labelAngle);
-                masteryCtx.fillStyle = chakraColors[i];
-                masteryCtx.font = '14px Arial';
-                masteryCtx.textAlign = 'center';
-                masteryCtx.textBaseline = 'middle';
-                masteryCtx.fillText(`Level ${i + 1}`, labelX, labelY);
-
-                startAngle += proportion;
-            }
-            masteryCtx.fillStyle = '#333';
-            masteryCtx.font = '24px Arial';
-            masteryCtx.textAlign = 'center';
-            masteryCtx.textBaseline = 'middle';
-            masteryCtx.fillText(`Mastery Progress: ${level}`, centerX, centerY);
+            masteryCtx.fillText(`Level ${i + 1}`, x, baseY + 30);
         }
+
+        // Draw infinity cloud if ample time past Level 4
+        if (ampleTimePastLevel4) {
+            masteryCtx.save();
+            masteryCtx.translate(width / 2, 50); // Position cloud at top center
+            masteryCtx.beginPath();
+            const cloudSize = 50;
+            const tSteps = 100;
+            for (let t = 0; t <= tSteps; t++) {
+                const tParam = (t / tSteps) * 2 * Math.PI;
+                const r = cloudSize * Math.sqrt(2) * Math.cos(tParam) / (Math.sin(tParam) * Math.sin(tParam) + 1);
+                const x = r * Math.cos(tParam);
+                const y = r * Math.sin(tParam);
+                if (t === 0) masteryCtx.moveTo(x, y);
+                else masteryCtx.lineTo(x, y);
+            }
+            masteryCtx.closePath();
+            masteryCtx.strokeStyle = '#D2B48C'; // Tan cloud
+            masteryCtx.lineWidth = 5;
+            masteryCtx.stroke();
+            masteryCtx.restore();
+        }
+
+        // Add central text
+        masteryCtx.fillStyle = '#333';
+        masteryCtx.font = '24px Arial';
+        masteryCtx.textAlign = 'center';
+        masteryCtx.textBaseline = 'middle';
+        masteryCtx.fillText(`Mastery Progress: ${level}`, width / 2, 30);
     }
 
     // Download canvas as image
