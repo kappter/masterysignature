@@ -79,10 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (answers.times[i] === 0) continue;
             const proportion = answers.times[i] / totalPoints;
             const angleSpan = proportion * 2 * Math.PI;
-            const radius = baseRadius + (answers.difficulties[i] * 5); // Vary radius based on difficulty
+            const radius = baseRadius + (answers.difficulties[i] * 5);
             previewCtx.beginPath();
             previewCtx.moveTo(centerX + Math.cos(startAngle) * radius, centerY + Math.sin(startAngle) * radius);
-            // Create a looping curve (simplified Bézier for infinity-like shape)
             const controlOffset = radius * 0.5;
             previewCtx.quadraticCurveTo(
                 centerX + Math.cos(startAngle + angleSpan / 2) * controlOffset,
@@ -90,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 centerX + Math.cos(startAngle + angleSpan) * radius,
                 centerY + Math.sin(startAngle + angleSpan) * radius
             );
-            previewCtx.lineWidth = 5 + (answers.difficulties[i] * 2); // Thickness based on difficulty
+            previewCtx.lineWidth = 5 + (answers.difficulties[i] * 2);
             previewCtx.strokeStyle = chakraColors[i];
             previewCtx.stroke();
             startAngle += angleSpan;
@@ -162,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('next-steps').textContent = nextSteps;
     });
 
-    // Function to draw the final mastery symbol as an evolving infinity-like structure
+    // Function to draw the final mastery symbol
     function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times) {
         const width = masteryCanvas.width;
         const height = masteryCanvas.height;
@@ -170,54 +169,113 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const centerX = width / 2;
         const centerY = height / 2;
-        const baseRadius = 100; // Larger canvas for detailed final symbol
-        let startAngle = 0;
+        const baseSize = 100; // Size of the infinity symbol
 
-        // Draw each segment as an evolving loop
-        for (let i = 0; i < times.length; i++) {
-            if (times[i] === 0) continue;
-            const proportion = segmentProportions[i];
-            const radius = baseRadius + (difficulties[i] * 10); // Vary radius for complexity
-            const complexity = i + 1; // Increase complexity with level
-            masteryCtx.beginPath();
-            let x = centerX + Math.cos(startAngle) * radius;
-            let y = centerY + Math.sin(startAngle) * radius;
-            masteryCtx.moveTo(x, y);
+        // Check for ample time past Level 4 (e.g., total time for Levels 5-7 > 100)
+        const ampleTimePastLevel4 = times.slice(4).reduce((sum, val) => sum + val, 0) > 100;
 
-            // Create an infinity-like curve with increasing loops
-            for (let j = 0; j < complexity; j++) {
-                const controlOffset = radius * 0.3 * (j + 1);
-                const midAngle = startAngle + (proportion * (j + 0.5) / complexity);
-                masteryCtx.quadraticCurveTo(
-                    centerX + Math.cos(midAngle) * controlOffset,
-                    centerY + Math.sin(midAngle) * controlOffset,
-                    centerX + Math.cos(startAngle + proportion / complexity * (j + 1)) * radius,
-                    centerY + Math.sin(startAngle + proportion / complexity * (j + 1)) * radius
-                );
+        if (ampleTimePastLevel4) {
+            // Draw infinity symbol with segments
+            let totalProportion = segmentProportions.reduce((sum, val) => sum + val, 0);
+            let currentAngle = 0;
+
+            // Find the level with maximum difficulty for orientation
+            const maxDifficultyIndex = difficulties.indexOf(Math.max(...difficulties));
+            const rotationAngle = -Math.PI / 2 + (maxDifficultyIndex * 2 * Math.PI / 7); // Rotate to place max difficulty at top
+
+            for (let i = 0; i < times.length; i++) {
+                if (times[i] === 0) continue;
+                const proportion = segmentProportions[i] / totalProportion * 2 * Math.PI; // Normalize to full loop
+                const size = baseSize + (difficulties[i] * 10); // Vary size by difficulty
+                const thickness = 10 + (difficulties[i] * 5); // Vary thickness by difficulty
+
+                masteryCtx.save();
+                masteryCtx.translate(centerX, centerY);
+                masteryCtx.rotate(rotationAngle); // Rotate based on max difficulty
+
+                masteryCtx.beginPath();
+                // Parametric equation for infinity symbol (lemniscate of Bernoulli)
+                const tSteps = 100;
+                for (let t = 0; t <= tSteps; t++) {
+                    const tParam = (t / tSteps) * proportion + currentAngle;
+                    const r = size * Math.sqrt(2) * Math.cos(tParam) / (Math.sin(tParam) * Math.sin(tParam) + 1);
+                    const x = r * Math.cos(tParam);
+                    const y = r * Math.sin(tParam);
+                    if (t === 0) masteryCtx.moveTo(x, y);
+                    else masteryCtx.lineTo(x, y);
+                }
+                masteryCtx.closePath();
+                masteryCtx.lineWidth = thickness;
+                masteryCtx.strokeStyle = chakraColors[i];
+                masteryCtx.stroke();
+
+                // Add label
+                const labelAngle = currentAngle + proportion / 2;
+                const labelX = size * Math.cos(labelAngle + rotationAngle);
+                const labelY = size * Math.sin(labelAngle + rotationAngle);
+                masteryCtx.fillStyle = chakraColors[i];
+                masteryCtx.font = '14px Arial';
+                masteryCtx.textAlign = 'center';
+                masteryCtx.textBaseline = 'middle';
+                masteryCtx.fillText(`Level ${i + 1}`, labelX, labelY);
+
+                currentAngle += proportion;
+                masteryCtx.restore();
             }
-            masteryCtx.lineWidth = 10 + (difficulties[i] * 5); // Thickness based on difficulty
-            masteryCtx.strokeStyle = chakraColors[i];
-            masteryCtx.stroke();
 
-            // Add label
-            const labelAngle = startAngle + proportion / 2;
-            const labelX = centerX + (radius + 20) * Math.cos(labelAngle);
-            const labelY = centerY + (radius + 20) * Math.sin(labelAngle);
-            masteryCtx.font = '14px Arial';
-            masteryCtx.fillStyle = chakraColors[i];
+            // Add central text
+            masteryCtx.save();
+            masteryCtx.translate(centerX, centerY);
+            masteryCtx.rotate(rotationAngle); // Keep text aligned with rotation
+            masteryCtx.fillStyle = '#333';
+            masteryCtx.font = '24px Arial';
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
-            masteryCtx.fillText(`Level ${i + 1}`, labelX, labelY);
+            masteryCtx.fillText(`Mastery Level: ${level}`, 0, 0);
+            masteryCtx.restore();
+        } else {
+            // Fallback to evolving loops if ample time not met
+            let startAngle = 0;
+            for (let i = 0; i < times.length; i++) {
+                if (times[i] === 0) continue;
+                const proportion = segmentProportions[i];
+                const radius = baseSize + (difficulties[i] * 10);
+                const complexity = i + 1;
+                masteryCtx.beginPath();
+                let x = centerX + Math.cos(startAngle) * radius;
+                let y = centerY + Math.sin(startAngle) * radius;
+                masteryCtx.moveTo(x, y);
+                for (let j = 0; j < complexity; j++) {
+                    const controlOffset = radius * 0.3 * (j + 1);
+                    const midAngle = startAngle + (proportion * (j + 0.5) / complexity);
+                    masteryCtx.quadraticCurveTo(
+                        centerX + Math.cos(midAngle) * controlOffset,
+                        centerY + Math.sin(midAngle) * controlOffset,
+                        centerX + Math.cos(startAngle + proportion / complexity * (j + 1)) * radius,
+                        centerY + Math.sin(startAngle + proportion / complexity * (j + 1)) * radius
+                    );
+                }
+                masteryCtx.lineWidth = 10 + (difficulties[i] * 5);
+                masteryCtx.strokeStyle = chakraColors[i];
+                masteryCtx.stroke();
 
-            startAngle += proportion;
+                const labelAngle = startAngle + proportion / 2;
+                const labelX = centerX + (radius + 20) * Math.cos(labelAngle);
+                const labelY = centerY + (radius + 20) * Math.sin(labelAngle);
+                masteryCtx.fillStyle = chakraColors[i];
+                masteryCtx.font = '14px Arial';
+                masteryCtx.textAlign = 'center';
+                masteryCtx.textBaseline = 'middle';
+                masteryCtx.fillText(`Level ${i + 1}`, labelX, labelY);
+
+                startAngle += proportion;
+            }
+            masteryCtx.fillStyle = '#333';
+            masteryCtx.font = '24px Arial';
+            masteryCtx.textAlign = 'center';
+            masteryCtx.textBaseline = 'middle';
+            masteryCtx.fillText(`Mastery Level: ${level}`, centerX, centerY);
         }
-
-        // Add central text for context
-        masteryCtx.font = '24px Arial';
-        masteryCtx.fillStyle = '#333';
-        masteryCtx.textAlign = 'center';
-        masteryCtx.textBaseline = 'middle';
-        masteryCtx.fillText(`Mastery Level: ${level}`, centerX, centerY);
     }
 
     // Download canvas as image
