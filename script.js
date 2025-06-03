@@ -16,16 +16,32 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentQuestion = 0;
     let answers = { times: [], difficulties: [] };
 
-    // Earth tone colors for each level
-    const earthTones = [
-        '#F5F5DC', // Sandy Beige (Level 1)
-        '#E2725B', // Terracotta (Level 2)
-        '#808000', // Olive Green (Level 3)
-        '#8B4513', // Earth Brown (Level 4)
-        '#228B22', // Forest Green (Level 5)
-        '#708090', // Stone Gray (Level 6)
-        '#5C4033'  // Deep Clay (Level 7)
+    // Gradient color pairs for each level
+    const gradientColors = [
+        ['#F5F5DC', '#D2B48C'], // Level 1: Sandy Beige to Light Tan
+        ['#E2725B', '#F4A460'], // Level 2: Terracotta to Soft Coral
+        ['#808000', '#9ACD32'], // Level 3: Olive Green to Sage Green
+        ['#8B4513', '#A0522D'], // Level 4: Earth Brown to Warm Brown
+        ['#228B22', '#3CB371'], // Level 5: Forest Green to Moss Green
+        ['#708090', '#4682B4'], // Level 6: Stone Gray to Slate Gray
+        ['#5C4033', '#6F4E37']  // Level 7: Deep Clay to Rich Umber
     ];
+
+    // Time value to label mapping
+    const timeLabels = {
+        0: 'None',
+        1: 'Hours',
+        5: 'Days',
+        20: 'Weeks',
+        50: 'Months',
+        100: '1-2 Years',
+        200: '2-5 Years',
+        500: '5+ Years',
+        10: '5-10 hours',
+        40: '20-40 hours',
+        60: '40-60 hours',
+        80: '60+ hours'
+    };
 
     // Pagination logic
     const showQuestion = (index) => {
@@ -63,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Function to draw the preview as a simplified mountain range
+    // Function to draw the preview as a simplified Mastery Blossom
     function drawPreview() {
         const width = previewCanvas.width;
         const height = previewCanvas.height;
@@ -73,27 +89,83 @@ document.addEventListener('DOMContentLoaded', () => {
         previewCtx.fillStyle = '#E6E6FA'; // Light lavender sky
         previewCtx.fillRect(0, 0, width, height);
 
-        const peakWidth = width / 7; // Divide canvas into 7 sections for preview
-        const baseY = height - 20;
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const maxRadius = Math.min(width, height) / 2 - 40;
+        const baseRadius = 20;
 
-        for (let i = 0; i < answers.times.length; i++) {
-            if (answers.times[i] === 0) continue;
+        // Determine the maximum time to scale the radius
+        const maxTime = Math.max(...(answers.times.length > 0 ? answers.times : [0]), 0);
+        const scaleFactor = maxTime > 0 ? (maxRadius - baseRadius) / maxTime : 1;
+
+        // Draw the connected blossom shape
+        previewCtx.beginPath();
+        for (let i = 0; i < 7; i++) {
+            const time = i < answers.times.length ? answers.times[i] : 0;
+            const difficulty = i < answers.difficulties.length ? answers.difficulties[i] : 1;
+            const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
+            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
+            const steps = 10;
+
+            for (let t = 0; t <= steps; t++) {
+                const angle = angleStart + (t / steps) * (angleEnd - angleStart);
+                const r = radius + Math.sin((t / steps) * Math.PI) * (difficulty * 5 * scaleFactor);
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                if (t === 0 && i === 0) previewCtx.moveTo(x, y);
+                else previewCtx.lineTo(x, y);
+            }
+        }
+        previewCtx.closePath();
+
+        // Apply gradient fill
+        for (let i = 0; i < 7; i++) {
+            if (i >= answers.times.length || answers.times[i] === 0) continue;
+            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
             const time = answers.times[i];
-            const difficulty = answers.difficulties[i];
-            const peakHeight = (time / 500) * (height - 40); // Scale height by time (max 500)
-            const peakBaseWidth = difficulty * 10; // Scale width by difficulty
+            const radius = baseRadius + (time * scaleFactor);
 
-            const x = i * peakWidth + peakWidth / 2;
+            const gradient = previewCtx.createLinearGradient(
+                centerX, centerY,
+                centerX + Math.cos((angleStart + angleEnd) / 2) * radius,
+                centerY + Math.sin((angleStart + angleEnd) / 2) * radius
+            );
+            gradient.addColorStop(0, gradientColors[i][0]);
+            gradient.addColorStop(1, gradientColors[i][1]);
+
             previewCtx.beginPath();
-            previewCtx.moveTo(x - peakBaseWidth, baseY);
-            previewCtx.lineTo(x, baseY - peakHeight);
-            previewCtx.lineTo(x + peakBaseWidth, baseY);
+            previewCtx.moveTo(centerX, centerY);
+            for (let t = 0; t <= 10; t++) {
+                const angle = angleStart + (t / 10) * (angleEnd - angleStart);
+                const r = radius + Math.sin((t / 10) * Math.PI) * (answers.difficulties[i] * 5 * scaleFactor);
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                previewCtx.lineTo(x, y);
+            }
             previewCtx.closePath();
-            previewCtx.fillStyle = earthTones[i];
+            previewCtx.fillStyle = gradient;
             previewCtx.fill();
             previewCtx.strokeStyle = '#333';
             previewCtx.lineWidth = 1;
             previewCtx.stroke();
+        }
+
+        // Overlay time labels
+        for (let i = 0; i < answers.times.length; i++) {
+            if (answers.times[i] === 0) continue;
+            const time = answers.times[i];
+            const difficulty = answers.difficulties[i];
+            const angle = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const radius = baseRadius + (time * scaleFactor) + (difficulty * 5 * scaleFactor);
+            const labelX = centerX + Math.cos(angle) * (radius + 20 * scaleFactor);
+            const labelY = centerY + Math.sin(angle) * (radius + 20 * scaleFactor);
+            previewCtx.fillStyle = '#333';
+            previewCtx.font = '12px Arial';
+            previewCtx.textAlign = 'center';
+            previewCtx.textBaseline = 'middle';
+            previewCtx.fillText(timeLabels[time], labelX, labelY);
         }
     }
 
@@ -149,12 +221,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('result-level').textContent = masteryProgressScore;
         document.getElementById('result-tier').textContent = tier;
 
-        // Calculate segment proportions (not used directly for mountains)
+        // Calculate segment proportions (not used directly)
         const totalPoints = times.reduce((sum, val) => sum + val, 0) || 1;
         const segmentProportions = times.map(val => (val / totalPoints) * 2 * Math.PI);
 
         // Draw the final mastery symbol
-        drawMasterySymbol(masteryProgressScore, segmentProportions, difficulties, hasHigherLevels, times);
+        drawMasterySymbol(masteryProgressScore, segmentProportions, difficulties, hasHigherLevels, times, topic);
 
         // Future projections
         const projectLevel = (years) => {
@@ -176,8 +248,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('next-steps').textContent = nextSteps;
     });
 
-    // Function to draw the final mastery symbol as a mountain range
-    function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times) {
+    // Function to draw the final mastery symbol as a Mastery Blossom
+    function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times, topic) {
         const width = masteryCanvas.width;
         const height = masteryCanvas.height;
         masteryCtx.clearRect(0, 0, width, height);
@@ -186,73 +258,134 @@ document.addEventListener('DOMContentLoaded', () => {
         masteryCtx.fillStyle = '#E6E6FA'; // Light lavender sky
         masteryCtx.fillRect(0, 0, width, height);
 
-        // Ground baseline
-        const baseY = height - 50;
-        masteryCtx.fillStyle = '#D2B48C'; // Tan ground
-        masteryCtx.fillRect(0, baseY, width, 50);
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const maxCanvasRadius = Math.min(width, height) / 2;
+        const baseRadius = 30;
 
-        const peakWidth = width / 7; // Divide canvas into 7 sections
-        const maxHeight = height - 100; // Max height for peaks
+        // Determine the maximum time to scale the radius
+        const maxTime = Math.max(...times, 0);
+        const targetRadius = maxTime > 0 ? maxCanvasRadius - 20 : maxCanvasRadius / 2; // Leave 20px for infinity ring or padding
+        const scaleFactor = maxTime > 0 ? (targetRadius - baseRadius) / maxTime : 1;
 
         // Check for ample time past Level 4
         const ampleTimePastLevel4 = times.slice(4).reduce((sum, val) => sum + val, 0) > 100;
 
-        // Draw each peak (mountain) for each level
-        for (let i = 0; i < times.length; i++) {
+        // Draw the connected blossom shape
+        masteryCtx.beginPath();
+        for (let i = 0; i < 7; i++) {
             const time = times[i];
-            if (time === 0) continue;
             const difficulty = difficulties[i];
-            const peakHeight = (time / 500) * maxHeight; // Scale height by time
-            const peakBaseWidth = difficulty * 15; // Scale width by difficulty
+            const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
+            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
+            const steps = 20;
 
-            const x = i * peakWidth + peakWidth / 2;
+            for (let t = 0; t <= steps; t++) {
+                const angle = angleStart + (t / steps) * (angleEnd - angleStart);
+                const r = radius + Math.sin((t / steps) * Math.PI) * (difficulty * 5 * scaleFactor);
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                if (t === 0 && i === 0) masteryCtx.moveTo(x, y);
+                else masteryCtx.lineTo(x, y);
+            }
+        }
+        masteryCtx.closePath();
+
+        // Apply gradient fill for each petal
+        for (let i = 0; i < 7; i++) {
+            const time = times[i];
+            const difficulty = difficulties[i];
+            const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
+            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
+
+            const gradient = masteryCtx.createLinearGradient(
+                centerX, centerY,
+                centerX + Math.cos((angleStart + angleEnd) / 2) * radius,
+                centerY + Math.sin((angleStart + angleEnd) / 2) * radius
+            );
+            gradient.addColorStop(0, gradientColors[i][0]);
+            gradient.addColorStop(1, gradientColors[i][1]);
+
             masteryCtx.beginPath();
-            masteryCtx.moveTo(x - peakBaseWidth, baseY);
-            masteryCtx.lineTo(x, baseY - peakHeight);
-            masteryCtx.lineTo(x + peakBaseWidth, baseY);
+            masteryCtx.moveTo(centerX, centerY);
+            for (let t = 0; t <= 20; t++) {
+                const angle = angleStart + (t / 20) * (angleEnd - angleStart);
+                const r = radius + Math.sin((t / 20) * Math.PI) * (difficulty * 5 * scaleFactor);
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                masteryCtx.lineTo(x, y);
+            }
             masteryCtx.closePath();
-            masteryCtx.fillStyle = earthTones[i];
+            masteryCtx.fillStyle = gradient;
             masteryCtx.fill();
             masteryCtx.strokeStyle = '#333';
             masteryCtx.lineWidth = 1;
             masteryCtx.stroke();
 
-            // Add label below the peak
+            // Overlay time label
+            const labelRadius = radius + (difficulty * 5 * scaleFactor) + (30 * scaleFactor); // Increased offset to avoid overlap
+            const labelAngle = (angleStart + angleEnd) / 2;
+            const labelX = centerX + Math.cos(labelAngle) * labelRadius;
+            const labelY = centerY + Math.sin(labelAngle) * labelRadius;
             masteryCtx.fillStyle = '#333';
-            masteryCtx.font = '14px Arial';
+            masteryCtx.font = `${Math.max(10, 12 * scaleFactor)}px Arial`; // Scale font size
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
-            masteryCtx.fillText(`Level ${i + 1}`, x, baseY + 30);
+            masteryCtx.fillText(timeLabels[time], labelX, labelY);
+
+            // Add level label near the center of the petal
+            const levelLabelRadius = Math.max(radius / 2, baseRadius * 1.5); // Ensure label is visible even for small petals
+            const levelLabelX = centerX + Math.cos(labelAngle) * levelLabelRadius;
+            const levelLabelY = centerY + Math.sin(labelAngle) * levelLabelRadius;
+            masteryCtx.fillStyle = '#333';
+            masteryCtx.font = `${Math.max(8, 12 * scaleFactor)}px Arial`;
+            masteryCtx.textAlign = 'center';
+            masteryCtx.textBaseline = 'middle';
+            masteryCtx.fillText(`Level ${i + 1}`, levelLabelX, levelLabelY);
         }
 
-        // Draw infinity cloud if ample time past Level 4
+        // Draw infinity ring if ample time past Level 4
         if (ampleTimePastLevel4) {
-            masteryCtx.save();
-            masteryCtx.translate(width / 2, 50); // Position cloud at top center
             masteryCtx.beginPath();
-            const cloudSize = 50;
+            const outerRadius = targetRadius + 20;
             const tSteps = 100;
             for (let t = 0; t <= tSteps; t++) {
                 const tParam = (t / tSteps) * 2 * Math.PI;
-                const r = cloudSize * Math.sqrt(2) * Math.cos(tParam) / (Math.sin(tParam) * Math.sin(tParam) + 1);
-                const x = r * Math.cos(tParam);
-                const y = r * Math.sin(tParam);
+                const r = outerRadius;
+                const x = centerX + Math.cos(tParam) * r;
+                const y = centerY + Math.sin(tParam) * r;
                 if (t === 0) masteryCtx.moveTo(x, y);
                 else masteryCtx.lineTo(x, y);
             }
             masteryCtx.closePath();
-            masteryCtx.strokeStyle = '#D2B48C'; // Tan cloud
+            masteryCtx.strokeStyle = '#D2B48C'; // Tan infinity ring
             masteryCtx.lineWidth = 5;
             masteryCtx.stroke();
-            masteryCtx.restore();
         }
 
-        // Add central text
-        masteryCtx.fillStyle = '#333';
-        masteryCtx.font = '24px Arial';
+        // Add title at the top with high contrast and discipline
+        const titleText = `${topic} Mastery Progress: ${level}`;
+        masteryCtx.font = 'bold 24px Georgia, Arial, sans-serif'; // More elegant font
         masteryCtx.textAlign = 'center';
         masteryCtx.textBaseline = 'middle';
-        masteryCtx.fillText(`Mastery Progress: ${level}`, width / 2, 30);
+        const titleX = centerX;
+        const titleY = centerY - targetRadius - 10; // Position above the blossom
+
+        // Add shadow for contrast instead of background
+        masteryCtx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+        masteryCtx.shadowBlur = 5;
+        masteryCtx.shadowOffsetX = 2;
+        masteryCtx.shadowOffsetY = 2;
+        masteryCtx.fillStyle = '#333';
+        masteryCtx.fillText(titleText, titleX, titleY);
+
+        // Reset shadow for other elements
+        masteryCtx.shadowColor = 'transparent';
+        masteryCtx.shadowBlur = 0;
+        masteryCtx.shadowOffsetX = 0;
+        masteryCtx.shadowOffsetY = 0;
     }
 
     // Download canvas as image
