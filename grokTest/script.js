@@ -48,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentInputs = questions[currentQuestion].querySelectorAll('select, input');
         if (Array.from(currentInputs).every(input => input.value)) {
             if (currentQuestion < questions.length - 1) {
-                // Store the current answers
                 if (currentQuestion > 0) {
                     const time = parseInt(questions[currentQuestion].querySelector(`select[name="time${currentQuestion}"]`).value);
                     const diff = parseInt(questions[currentQuestion].querySelector(`select[name="diff${currentQuestion}"]`).value);
@@ -57,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 currentQuestion++;
                 showQuestion(currentQuestion);
-                // Update preview
                 drawPreview();
             }
         } else {
@@ -65,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Function to draw the preview as a circular arc
+    // Function to draw the preview as an evolving loop
     function drawPreview() {
         const width = previewCanvas.width;
         const height = previewCanvas.height;
@@ -73,21 +71,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const centerX = width / 2;
         const centerY = height / 2;
-        const radius = Math.min(width, height) / 2 - 20;
+        const baseRadius = 50;
         const totalPoints = answers.times.reduce((sum, val) => sum + val, 0) || 1;
-        let startAngle = -Math.PI / 2; // Start at top
+        let startAngle = 0;
 
-        // Draw circular arcs
         for (let i = 0; i < answers.times.length; i++) {
             if (answers.times[i] === 0) continue;
-            const arcLength = (answers.times[i] / totalPoints) * 2 * Math.PI;
+            const proportion = answers.times[i] / totalPoints;
+            const angleSpan = proportion * 2 * Math.PI;
+            const radius = baseRadius + (answers.difficulties[i] * 5); // Vary radius based on difficulty
             previewCtx.beginPath();
-            previewCtx.arc(centerX, centerY, radius, startAngle, startAngle + arcLength);
-            previewCtx.lineWidth = 10 * (answers.difficulties[i] / 5);
+            previewCtx.moveTo(centerX + Math.cos(startAngle) * radius, centerY + Math.sin(startAngle) * radius);
+            // Create a looping curve (simplified Bézier for infinity-like shape)
+            const controlOffset = radius * 0.5;
+            previewCtx.quadraticCurveTo(
+                centerX + Math.cos(startAngle + angleSpan / 2) * controlOffset,
+                centerY + Math.sin(startAngle + angleSpan / 2) * controlOffset,
+                centerX + Math.cos(startAngle + angleSpan) * radius,
+                centerY + Math.sin(startAngle + angleSpan) * radius
+            );
+            previewCtx.lineWidth = 5 + (answers.difficulties[i] * 2); // Thickness based on difficulty
             previewCtx.strokeStyle = chakraColors[i];
-            previewCtx.lineCap = 'butt';
             previewCtx.stroke();
-            startAngle += arcLength;
+            startAngle += angleSpan;
         }
     }
 
@@ -130,12 +136,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('result-level').textContent = averageLevel;
         document.getElementById('result-tier').textContent = tier;
 
-        // Calculate segment angles
+        // Calculate segment proportions
         const totalPoints = times.reduce((sum, val) => sum + val, 0) || 1;
-        const segmentAngles = times.map(val => (val / totalPoints) * 2 * Math.PI);
+        const segmentProportions = times.map(val => (val / totalPoints) * 2 * Math.PI);
 
         // Draw the final mastery symbol
-        drawMasterySymbol(averageLevel, segmentAngles, difficulties, hasHigherLevels, times);
+        drawMasterySymbol(averageLevel, segmentProportions, difficulties, hasHigherLevels, times);
 
         // Future projections
         const projectLevel = (years) => {
@@ -156,43 +162,58 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('next-steps').textContent = nextSteps;
     });
 
-    // Function to draw the final mastery symbol as a circular arc with labels
-    function drawMasterySymbol(level, segmentAngles, difficulties, hasHigherLevels, times) {
+    // Function to draw the final mastery symbol as an evolving infinity-like structure
+    function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times) {
         const width = masteryCanvas.width;
         const height = masteryCanvas.height;
         masteryCtx.clearRect(0, 0, width, height);
 
         const centerX = width / 2;
         const centerY = height / 2;
-        const radius = Math.min(width, height) / 2 - 40;
-        let startAngle = -Math.PI / 2; // Start at top
+        const baseRadius = 100; // Larger canvas for detailed final symbol
+        let startAngle = 0;
 
-        // Draw circular arcs
+        // Draw each segment as an evolving loop
         for (let i = 0; i < times.length; i++) {
             if (times[i] === 0) continue;
-            const arcLength = segmentAngles[i];
+            const proportion = segmentProportions[i];
+            const radius = baseRadius + (difficulties[i] * 10); // Vary radius for complexity
+            const complexity = i + 1; // Increase complexity with level
             masteryCtx.beginPath();
-            masteryCtx.arc(centerX, centerY, radius, startAngle, startAngle + arcLength);
-            masteryCtx.lineWidth = 15 * (difficulties[i] / 5);
+            let x = centerX + Math.cos(startAngle) * radius;
+            let y = centerY + Math.sin(startAngle) * radius;
+            masteryCtx.moveTo(x, y);
+
+            // Create an infinity-like curve with increasing loops
+            for (let j = 0; j < complexity; j++) {
+                const controlOffset = radius * 0.3 * (j + 1);
+                const midAngle = startAngle + (proportion * (j + 0.5) / complexity);
+                masteryCtx.quadraticCurveTo(
+                    centerX + Math.cos(midAngle) * controlOffset,
+                    centerY + Math.sin(midAngle) * controlOffset,
+                    centerX + Math.cos(startAngle + proportion / complexity * (j + 1)) * radius,
+                    centerY + Math.sin(startAngle + proportion / complexity * (j + 1)) * radius
+                );
+            }
+            masteryCtx.lineWidth = 10 + (difficulties[i] * 5); // Thickness based on difficulty
             masteryCtx.strokeStyle = chakraColors[i];
-            masteryCtx.lineCap = 'butt';
             masteryCtx.stroke();
 
             // Add label
-            const labelAngle = startAngle + arcLength / 2;
+            const labelAngle = startAngle + proportion / 2;
             const labelX = centerX + (radius + 20) * Math.cos(labelAngle);
             const labelY = centerY + (radius + 20) * Math.sin(labelAngle);
-            masteryCtx.font = '12px Arial';
+            masteryCtx.font = '14px Arial';
             masteryCtx.fillStyle = chakraColors[i];
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
             masteryCtx.fillText(`Level ${i + 1}`, labelX, labelY);
 
-            startAngle += arcLength;
+            startAngle += proportion;
         }
 
-        // Add central text
-        masteryCtx.font = '20px Arial';
+        // Add central text for context
+        masteryCtx.font = '24px Arial';
         masteryCtx.fillStyle = '#333';
         masteryCtx.textAlign = 'center';
         masteryCtx.textBaseline = 'middle';
@@ -228,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formSection.style.display = 'block';
         resultSection.style.display = 'none';
         previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-        masteryCtx.clearRect(0, 0, masteryCanvas.width, masteryCanvas.height);
+        masteryCtx.clearRect(0, 0, masteryCanvas.height, masteryCanvas.height);
         showQuestion(currentQuestion);
     });
 
