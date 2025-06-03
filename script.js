@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const labelX = centerX + Math.cos(angle) * (radius + 20 * scaleFactor);
             const labelY = centerY + Math.sin(angle) * (radius + 20 * scaleFactor);
             previewCtx.fillStyle = '#333';
-            previewCtx.font = '8px Arial';
+            previewCtx.font = '12px Arial';
             previewCtx.textAlign = 'center';
             previewCtx.textBaseline = 'middle';
             previewCtx.fillText(timeLabels[time], labelX, labelY);
@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const labelX = centerX + Math.cos(labelAngle) * labelRadius;
                 const labelY = centerY + Math.sin(labelAngle) * labelRadius;
                 masteryCtx.fillStyle = '#333';
-                masteryCtx.font = `${Math.max(8, 10)}px Arial`;
+                masteryCtx.font = `${Math.max(10, 12)}px Arial`;
                 masteryCtx.textAlign = 'center';
                 masteryCtx.textBaseline = 'middle';
                 masteryCtx.fillText(timeLabels[time], labelX, labelY);
@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const levelLabelX = centerX + Math.cos(labelAngle) * levelLabelRadius;
             const levelLabelY = centerY + Math.sin(labelAngle) * levelLabelRadius;
             masteryCtx.fillStyle = '#333';
-            masteryCtx.font = `${Math.max(8, 10 )}px Arial`;
+            masteryCtx.font = `${Math.max(8, 12)}px Arial`;
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
             masteryCtx.fillText(`Level ${i + 1}`, levelLabelX, levelLabelY);
