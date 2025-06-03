@@ -27,6 +27,22 @@ document.addEventListener('DOMContentLoaded', () => {
         '#5C4033'  // Deep Clay (Level 7)
     ];
 
+    // Time value to label mapping
+    const timeLabels = {
+        0: 'None',
+        1: 'Hours',
+        5: 'Days',
+        20: 'Weeks',
+        50: 'Months',
+        100: '1-2 Years',
+        200: '2-5 Years',
+        500: '5+ Years',
+        10: '5-10 hours',
+        40: '20-40 hours',
+        60: '40-60 hours',
+        80: '60+ hours'
+    };
+
     // Pagination logic
     const showQuestion = (index) => {
         questions.forEach((q, i) => {
@@ -105,6 +121,15 @@ document.addEventListener('DOMContentLoaded', () => {
             previewCtx.strokeStyle = '#333';
             previewCtx.lineWidth = 1;
             previewCtx.stroke();
+
+            // Overlay time label
+            const labelX = centerX + Math.cos(angle) * (radius + 20);
+            const labelY = centerY + Math.sin(angle) * (radius + 20);
+            previewCtx.fillStyle = '#333';
+            previewCtx.font = '12px Arial';
+            previewCtx.textAlign = 'center';
+            previewCtx.textBaseline = 'middle';
+            previewCtx.fillText(timeLabels[time], labelX, labelY);
         }
     }
 
@@ -234,14 +259,23 @@ document.addEventListener('DOMContentLoaded', () => {
             masteryCtx.lineWidth = 1;
             masteryCtx.stroke();
 
-            // Add label near the column
+            // Overlay time label
             const labelX = centerX + Math.cos(angle) * (radius + 20);
             const labelY = centerY + Math.sin(angle) * (radius + 20);
             masteryCtx.fillStyle = '#333';
-            masteryCtx.font = '14px Arial';
+            masteryCtx.font = '12px Arial';
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
-            masteryCtx.fillText(`Level ${i + 1}`, labelX, labelY);
+            masteryCtx.fillText(timeLabels[time], labelX, labelY);
+
+            // Add level label near the column
+            const levelLabelX = centerX + Math.cos(angle) * (radius / 2);
+            const levelLabelY = centerY + Math.sin(angle) * (radius / 2);
+            masteryCtx.fillStyle = '#333';
+            masteryCtx.font = '12px Arial';
+            masteryCtx.textAlign = 'center';
+            masteryCtx.textBaseline = 'middle';
+            masteryCtx.fillText(`Level ${i + 1}`, levelLabelX, levelLabelY);
         }
 
         // Draw infinity ring if ample time past Level 4
