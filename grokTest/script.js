@@ -96,6 +96,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Function to map average time to a 1-7 scale
+    function mapToMasteryLevel(averageTime) {
+        if (averageTime === 0) return 0;
+        if (averageTime <= 10) return 1;   // Up to "1-5 hours" or "Days"
+        if (averageTime <= 50) return 2;   // Up to "10-20 hours" or "Months"
+        if (averageTime <= 100) return 3;  // Up to "1-2 Years"
+        if (averageTime <= 200) return 4;  // Up to "2-5 Years"
+        if (averageTime <= 300) return 5;  // Intermediate progress
+        if (averageTime <= 400) return 6;  // High progress
+        return 7;                          // Max progress (e.g., "5+ Years" = 500)
+    }
+
     // Form submission and result calculation
     form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -120,9 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
             parseInt(formData.get('diff7'))
         ];
 
-        // Calculate average mastery level
+        // Calculate mastery progress score
         const nonZeroTimes = times.filter(val => val > 0);
-        const averageLevel = nonZeroTimes.length > 0 ? Math.round(nonZeroTimes.reduce((sum, val) => sum + val, 0) / nonZeroTimes.length) : 0;
+        const averageTime = nonZeroTimes.length > 0 ? nonZeroTimes.reduce((sum, val) => sum + val, 0) / nonZeroTimes.length : 0;
+        const masteryProgressScore = mapToMasteryLevel(Math.round(averageTime));
 
         // Determine tier
         const hasHigherLevels = times.slice(3).some(time => time > 0);
@@ -132,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formSection.style.display = 'none';
         resultSection.style.display = 'block';
         document.getElementById('result-topic').textContent = topic;
-        document.getElementById('result-level').textContent = averageLevel;
+        document.getElementById('result-level').textContent = masteryProgressScore;
         document.getElementById('result-tier').textContent = tier;
 
         // Calculate segment proportions
@@ -140,12 +153,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const segmentProportions = times.map(val => (val / totalPoints) * 2 * Math.PI);
 
         // Draw the final mastery symbol
-        drawMasterySymbol(averageLevel, segmentProportions, difficulties, hasHigherLevels, times);
+        drawMasterySymbol(masteryProgressScore, segmentProportions, difficulties, hasHigherLevels, times);
 
         // Future projections
         const projectLevel = (years) => {
             const growthRate = 0.1;
-            return Math.min(7, Math.round(averageLevel + growthRate * years));
+            const projectedTime = averageTime + (growthRate * years * 100); // Scale growth
+            return Math.min(7, mapToMasteryLevel(Math.round(projectedTime)));
         };
 
         document.getElementById('proj-1-year').textContent = projectLevel(1);
@@ -169,32 +183,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const centerX = width / 2;
         const centerY = height / 2;
-        const baseSize = 100; // Size of the infinity symbol
+        const baseSize = 100;
 
-        // Check for ample time past Level 4 (e.g., total time for Levels 5-7 > 100)
+        // Check for ample time past Level 4
         const ampleTimePastLevel4 = times.slice(4).reduce((sum, val) => sum + val, 0) > 100;
 
         if (ampleTimePastLevel4) {
-            // Draw infinity symbol with segments
             let totalProportion = segmentProportions.reduce((sum, val) => sum + val, 0);
             let currentAngle = 0;
 
-            // Find the level with maximum difficulty for orientation
             const maxDifficultyIndex = difficulties.indexOf(Math.max(...difficulties));
-            const rotationAngle = -Math.PI / 2 + (maxDifficultyIndex * 2 * Math.PI / 7); // Rotate to place max difficulty at top
+            const rotationAngle = -Math.PI / 2 + (maxDifficultyIndex * 2 * Math.PI / 7);
 
             for (let i = 0; i < times.length; i++) {
                 if (times[i] === 0) continue;
-                const proportion = segmentProportions[i] / totalProportion * 2 * Math.PI; // Normalize to full loop
-                const size = baseSize + (difficulties[i] * 10); // Vary size by difficulty
-                const thickness = 10 + (difficulties[i] * 5); // Vary thickness by difficulty
+                const proportion = segmentProportions[i] / totalProportion * 2 * Math.PI;
+                const size = baseSize + (difficulties[i] * 10);
+                const thickness = 10 + (difficulties[i] * 5);
 
                 masteryCtx.save();
                 masteryCtx.translate(centerX, centerY);
-                masteryCtx.rotate(rotationAngle); // Rotate based on max difficulty
+                masteryCtx.rotate(rotationAngle);
 
                 masteryCtx.beginPath();
-                // Parametric equation for infinity symbol (lemniscate of Bernoulli)
                 const tSteps = 100;
                 for (let t = 0; t <= tSteps; t++) {
                     const tParam = (t / tSteps) * proportion + currentAngle;
@@ -209,7 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 masteryCtx.strokeStyle = chakraColors[i];
                 masteryCtx.stroke();
 
-                // Add label
                 const labelAngle = currentAngle + proportion / 2;
                 const labelX = size * Math.cos(labelAngle + rotationAngle);
                 const labelY = size * Math.sin(labelAngle + rotationAngle);
@@ -223,18 +233,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 masteryCtx.restore();
             }
 
-            // Add central text
             masteryCtx.save();
             masteryCtx.translate(centerX, centerY);
-            masteryCtx.rotate(rotationAngle); // Keep text aligned with rotation
+            masteryCtx.rotate(rotationAngle);
             masteryCtx.fillStyle = '#333';
             masteryCtx.font = '24px Arial';
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
-            masteryCtx.fillText(`Mastery Level: ${level}`, 0, 0);
+            masteryCtx.fillText(`Mastery Progress: ${level}`, 0, 0);
             masteryCtx.restore();
         } else {
-            // Fallback to evolving loops if ample time not met
             let startAngle = 0;
             for (let i = 0; i < times.length; i++) {
                 if (times[i] === 0) continue;
@@ -274,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
             masteryCtx.font = '24px Arial';
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
-            masteryCtx.fillText(`Mastery Level: ${level}`, centerX, centerY);
+            masteryCtx.fillText(`Mastery Progress: ${level}`, centerX, centerY);
         }
     }
 
