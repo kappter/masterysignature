@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const labelX = centerX + Math.cos(labelAngle) * labelRadius;
                 const labelY = centerY + Math.sin(labelAngle) * labelRadius;
                 masteryCtx.fillStyle = '#333';
-                masteryCtx.font = `${Math.max(8, 10 * scaleFactor)}px Arial`;
+                masteryCtx.font = `${Math.max(8, 10)}px Arial`;
                 masteryCtx.textAlign = 'center';
                 masteryCtx.textBaseline = 'middle';
                 masteryCtx.fillText(timeLabels[time], labelX, labelY);
@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const levelLabelX = centerX + Math.cos(labelAngle) * levelLabelRadius;
             const levelLabelY = centerY + Math.sin(labelAngle) * levelLabelRadius;
             masteryCtx.fillStyle = '#333';
-            masteryCtx.font = `${Math.max(8, 10 * scaleFactor)}px Arial`;
+            masteryCtx.font = `${Math.max(8, 10 )}px Arial`;
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
             masteryCtx.fillText(`Level ${i + 1}`, levelLabelX, levelLabelY);
