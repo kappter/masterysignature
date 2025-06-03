@@ -16,15 +16,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentQuestion = 0;
     let answers = { times: [], difficulties: [] };
 
-    // Earth tone colors for each level
-    const earthTones = [
-        '#F5F5DC', // Sandy Beige (Level 1)
-        '#E2725B', // Terracotta (Level 2)
-        '#808000', // Olive Green (Level 3)
-        '#8B4513', // Earth Brown (Level 4)
-        '#228B22', // Forest Green (Level 5)
-        '#708090', // Stone Gray (Level 6)
-        '#5C4033'  // Deep Clay (Level 7)
+    // Gradient color pairs for each level
+    const gradientColors = [
+        ['#F5F5DC', '#D2B48C'], // Level 1: Sandy Beige to Light Tan
+        ['#E2725B', '#F4A460'], // Level 2: Terracotta to Soft Coral
+        ['#808000', '#9ACD32'], // Level 3: Olive Green to Sage Green
+        ['#8B4513', '#A0522D'], // Level 4: Earth Brown to Warm Brown
+        ['#228B22', '#3CB371'], // Level 5: Forest Green to Moss Green
+        ['#708090', '#4682B4'], // Level 6: Stone Gray to Slate Gray
+        ['#5C4033', '#6F4E37']  // Level 7: Deep Clay to Rich Umber
     ];
 
     // Time value to label mapping
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Function to draw the preview as a simplified radial column chart
+    // Function to draw the preview as a simplified Mastery Blossom
     function drawPreview() {
         const width = previewCanvas.width;
         const height = previewCanvas.height;
@@ -91,38 +91,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const centerX = width / 2;
         const centerY = height / 2;
-        const maxRadius = Math.min(width, height) / 2 - 20;
+        const maxRadius = Math.min(width, height) / 2 - 40;
+        const baseRadius = 20; // Minimum radius for petals with no time
 
-        for (let i = 0; i < answers.times.length; i++) {
-            if (answers.times[i] === 0) continue;
+        // Draw the connected blossom shape
+        previewCtx.beginPath();
+        for (let i = 0; i < 7; i++) {
+            const time = i < answers.times.length ? answers.times[i] : 0;
+            const difficulty = i < answers.difficulties.length ? answers.difficulties[i] : 1;
+            const radius = time > 0 ? baseRadius + (time / 500) * (maxRadius - baseRadius) : baseRadius;
+            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
+            const steps = 10; // Smoothness of petal curve
+
+            for (let t = 0; t <= steps; t++) {
+                const angle = angleStart + (t / steps) * (angleEnd - angleStart);
+                const r = radius + Math.sin((t / steps) * Math.PI) * (difficulty * 5); // Petal shape modulation
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                if (t === 0 && i === 0) previewCtx.moveTo(x, y);
+                else previewCtx.lineTo(x, y);
+            }
+        }
+        previewCtx.closePath();
+
+        // Apply gradient fill
+        for (let i = 0; i < 7; i++) {
+            if (i >= answers.times.length || answers.times[i] === 0) continue;
+            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
             const time = answers.times[i];
-            const difficulty = answers.difficulties[i];
-            const angle = (i / 7) * 2 * Math.PI - Math.PI / 2; // Start at top, spread evenly
-            const radius = (time / 500) * maxRadius; // Scale radius by time
-            const thickness = difficulty * 5; // Scale thickness by difficulty
+            const radius = baseRadius + (time / 500) * (maxRadius - baseRadius);
 
-            const x1 = centerX + Math.cos(angle) * thickness / 2;
-            const y1 = centerY + Math.sin(angle) * thickness / 2;
-            const x2 = centerX + Math.cos(angle) * (radius + thickness / 2);
-            const y2 = centerY + Math.sin(angle) * (radius + thickness / 2);
-            const x3 = centerX + Math.cos(angle + Math.PI / 7) * (radius + thickness / 2);
-            const y3 = centerY + Math.sin(angle + Math.PI / 7) * (radius + thickness / 2);
-            const x4 = centerX + Math.cos(angle + Math.PI / 7) * thickness / 2;
-            const y4 = centerY + Math.sin(angle + Math.PI / 7) * thickness / 2;
+            const gradient = previewCtx.createLinearGradient(
+                centerX, centerY,
+                centerX + Math.cos((angleStart + angleEnd) / 2) * radius,
+                centerY + Math.sin((angleStart + angleEnd) / 2) * radius
+            );
+            gradient.addColorStop(0, gradientColors[i][0]);
+            gradient.addColorStop(1, gradientColors[i][1]);
 
             previewCtx.beginPath();
-            previewCtx.moveTo(x1, y1);
-            previewCtx.lineTo(x2, y2);
-            previewCtx.lineTo(x3, y3);
-            previewCtx.lineTo(x4, y4);
+            previewCtx.moveTo(centerX, centerY);
+            for (let t = 0; t <= 10; t++) {
+                const angle = angleStart + (t / 10) * (angleEnd - angleStart);
+                const r = radius + Math.sin((t / 10) * Math.PI) * (answers.difficulties[i] * 5);
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                previewCtx.lineTo(x, y);
+            }
             previewCtx.closePath();
-            previewCtx.fillStyle = earthTones[i];
+            previewCtx.fillStyle = gradient;
             previewCtx.fill();
             previewCtx.strokeStyle = '#333';
             previewCtx.lineWidth = 1;
             previewCtx.stroke();
+        }
 
-            // Overlay time label
+        // Overlay time labels
+        for (let i = 0; i < answers.times.length; i++) {
+            if (answers.times[i] === 0) continue;
+            const time = answers.times[i];
+            const difficulty = answers.difficulties[i];
+            const angle = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const radius = baseRadius + (time / 500) * (maxRadius - baseRadius) + (difficulty * 5);
             const labelX = centerX + Math.cos(angle) * (radius + 20);
             const labelY = centerY + Math.sin(angle) * (radius + 20);
             previewCtx.fillStyle = '#333';
@@ -185,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('result-level').textContent = masteryProgressScore;
         document.getElementById('result-tier').textContent = tier;
 
-        // Calculate segment proportions (not used directly for columns)
+        // Calculate segment proportions (not used directly)
         const totalPoints = times.reduce((sum, val) => sum + val, 0) || 1;
         const segmentProportions = times.map(val => (val / totalPoints) * 2 * Math.PI);
 
@@ -212,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('next-steps').textContent = nextSteps;
     });
 
-    // Function to draw the final mastery symbol as a radial column chart
+    // Function to draw the final mastery symbol as a Mastery Blossom
     function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times) {
         const width = masteryCanvas.width;
         const height = masteryCanvas.height;
@@ -225,52 +257,79 @@ document.addEventListener('DOMContentLoaded', () => {
         const centerX = width / 2;
         const centerY = height / 2;
         const maxRadius = Math.min(width, height) / 2 - 50;
+        const baseRadius = 30; // Minimum radius for petals with no time
 
         // Check for ample time past Level 4
         const ampleTimePastLevel4 = times.slice(4).reduce((sum, val) => sum + val, 0) > 100;
 
-        // Draw each radial column for each level
-        for (let i = 0; i < times.length; i++) {
+        // Draw the connected blossom shape
+        masteryCtx.beginPath();
+        for (let i = 0; i < 7; i++) {
             const time = times[i];
-            if (time === 0) continue;
             const difficulty = difficulties[i];
-            const angle = (i / 7) * 2 * Math.PI - Math.PI / 2; // Start at top, spread evenly
-            const radius = (time / 500) * maxRadius; // Scale radius by time
-            const thickness = difficulty * 10; // Scale thickness by difficulty
+            const radius = time > 0 ? baseRadius + (time / 500) * (maxRadius - baseRadius) : baseRadius;
+            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
+            const steps = 20; // Smoothness of petal curve
 
-            const x1 = centerX + Math.cos(angle) * thickness / 2;
-            const y1 = centerY + Math.sin(angle) * thickness / 2;
-            const x2 = centerX + Math.cos(angle) * (radius + thickness / 2);
-            const y2 = centerY + Math.sin(angle) * (radius + thickness / 2);
-            const x3 = centerX + Math.cos(angle + Math.PI / 7) * (radius + thickness / 2);
-            const y3 = centerY + Math.sin(angle + Math.PI / 7) * (radius + thickness / 2);
-            const x4 = centerX + Math.cos(angle + Math.PI / 7) * thickness / 2;
-            const y4 = centerY + Math.sin(angle + Math.PI / 7) * thickness / 2;
+            for (let t = 0; t <= steps; t++) {
+                const angle = angleStart + (t / steps) * (angleEnd - angleStart);
+                const r = radius + Math.sin((t / steps) * Math.PI) * (difficulty * 5); // Petal shape modulation
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                if (t === 0 && i === 0) masteryCtx.moveTo(x, y);
+                else masteryCtx.lineTo(x, y);
+            }
+        }
+        masteryCtx.closePath();
+
+        // Apply gradient fill for each petal
+        for (let i = 0; i < 7; i++) {
+            const time = times[i];
+            const difficulty = difficulties[i];
+            const radius = time > 0 ? baseRadius + (time / 500) * (maxRadius - baseRadius) : baseRadius;
+            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
+
+            const gradient = masteryCtx.createLinearGradient(
+                centerX, centerY,
+                centerX + Math.cos((angleStart + angleEnd) / 2) * radius,
+                centerY + Math.sin((angleStart + angleEnd) / 2) * radius
+            );
+            gradient.addColorStop(0, gradientColors[i][0]);
+            gradient.addColorStop(1, gradientColors[i][1]);
 
             masteryCtx.beginPath();
-            masteryCtx.moveTo(x1, y1);
-            masteryCtx.lineTo(x2, y2);
-            masteryCtx.lineTo(x3, y3);
-            masteryCtx.lineTo(x4, y4);
+            masteryCtx.moveTo(centerX, centerY);
+            for (let t = 0; t <= 20; t++) {
+                const angle = angleStart + (t / 20) * (angleEnd - angleStart);
+                const r = radius + Math.sin((t / 20) * Math.PI) * (difficulty * 5);
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                masteryCtx.lineTo(x, y);
+            }
             masteryCtx.closePath();
-            masteryCtx.fillStyle = earthTones[i];
+            masteryCtx.fillStyle = gradient;
             masteryCtx.fill();
             masteryCtx.strokeStyle = '#333';
             masteryCtx.lineWidth = 1;
             masteryCtx.stroke();
 
             // Overlay time label
-            const labelX = centerX + Math.cos(angle) * (radius + 20);
-            const labelY = centerY + Math.sin(angle) * (radius + 20);
+            const labelRadius = radius + (difficulty * 5) + 20;
+            const labelAngle = (angleStart + angleEnd) / 2;
+            const labelX = centerX + Math.cos(labelAngle) * labelRadius;
+            const labelY = centerY + Math.sin(labelAngle) * labelRadius;
             masteryCtx.fillStyle = '#333';
             masteryCtx.font = '12px Arial';
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
             masteryCtx.fillText(timeLabels[time], labelX, labelY);
 
-            // Add level label near the column
-            const levelLabelX = centerX + Math.cos(angle) * (radius / 2);
-            const levelLabelY = centerY + Math.sin(angle) * (radius / 2);
+            // Add level label near the center of the petal
+            const levelLabelRadius = radius / 2;
+            const levelLabelX = centerX + Math.cos(labelAngle) * levelLabelRadius;
+            const levelLabelY = centerY + Math.sin(labelAngle) * levelLabelRadius;
             masteryCtx.fillStyle = '#333';
             masteryCtx.font = '12px Arial';
             masteryCtx.textAlign = 'center';
