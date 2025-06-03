@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Function to draw the preview as a simplified mountain range
+    // Function to draw the preview as a simplified radial column chart
     function drawPreview() {
         const width = previewCanvas.width;
         const height = previewCanvas.height;
@@ -73,21 +73,32 @@ document.addEventListener('DOMContentLoaded', () => {
         previewCtx.fillStyle = '#E6E6FA'; // Light lavender sky
         previewCtx.fillRect(0, 0, width, height);
 
-        const peakWidth = width / 7; // Divide canvas into 7 sections for preview
-        const baseY = height - 20;
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const maxRadius = Math.min(width, height) / 2 - 20;
 
         for (let i = 0; i < answers.times.length; i++) {
             if (answers.times[i] === 0) continue;
             const time = answers.times[i];
             const difficulty = answers.difficulties[i];
-            const peakHeight = (time / 500) * (height - 40); // Scale height by time (max 500)
-            const peakBaseWidth = difficulty * 10; // Scale width by difficulty
+            const angle = (i / 7) * 2 * Math.PI - Math.PI / 2; // Start at top, spread evenly
+            const radius = (time / 500) * maxRadius; // Scale radius by time
+            const thickness = difficulty * 5; // Scale thickness by difficulty
 
-            const x = i * peakWidth + peakWidth / 2;
+            const x1 = centerX + Math.cos(angle) * thickness / 2;
+            const y1 = centerY + Math.sin(angle) * thickness / 2;
+            const x2 = centerX + Math.cos(angle) * (radius + thickness / 2);
+            const y2 = centerY + Math.sin(angle) * (radius + thickness / 2);
+            const x3 = centerX + Math.cos(angle + Math.PI / 7) * (radius + thickness / 2);
+            const y3 = centerY + Math.sin(angle + Math.PI / 7) * (radius + thickness / 2);
+            const x4 = centerX + Math.cos(angle + Math.PI / 7) * thickness / 2;
+            const y4 = centerY + Math.sin(angle + Math.PI / 7) * thickness / 2;
+
             previewCtx.beginPath();
-            previewCtx.moveTo(x - peakBaseWidth, baseY);
-            previewCtx.lineTo(x, baseY - peakHeight);
-            previewCtx.lineTo(x + peakBaseWidth, baseY);
+            previewCtx.moveTo(x1, y1);
+            previewCtx.lineTo(x2, y2);
+            previewCtx.lineTo(x3, y3);
+            previewCtx.lineTo(x4, y4);
             previewCtx.closePath();
             previewCtx.fillStyle = earthTones[i];
             previewCtx.fill();
@@ -149,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('result-level').textContent = masteryProgressScore;
         document.getElementById('result-tier').textContent = tier;
 
-        // Calculate segment proportions (not used directly for mountains)
+        // Calculate segment proportions (not used directly for columns)
         const totalPoints = times.reduce((sum, val) => sum + val, 0) || 1;
         const segmentProportions = times.map(val => (val / totalPoints) * 2 * Math.PI);
 
@@ -176,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('next-steps').textContent = nextSteps;
     });
 
-    // Function to draw the final mastery symbol as a mountain range
+    // Function to draw the final mastery symbol as a radial column chart
     function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times) {
         const width = masteryCanvas.width;
         const height = masteryCanvas.height;
@@ -186,30 +197,36 @@ document.addEventListener('DOMContentLoaded', () => {
         masteryCtx.fillStyle = '#E6E6FA'; // Light lavender sky
         masteryCtx.fillRect(0, 0, width, height);
 
-        // Ground baseline
-        const baseY = height - 50;
-        masteryCtx.fillStyle = '#D2B48C'; // Tan ground
-        masteryCtx.fillRect(0, baseY, width, 50);
-
-        const peakWidth = width / 7; // Divide canvas into 7 sections
-        const maxHeight = height - 100; // Max height for peaks
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const maxRadius = Math.min(width, height) / 2 - 50;
 
         // Check for ample time past Level 4
         const ampleTimePastLevel4 = times.slice(4).reduce((sum, val) => sum + val, 0) > 100;
 
-        // Draw each peak (mountain) for each level
+        // Draw each radial column for each level
         for (let i = 0; i < times.length; i++) {
             const time = times[i];
             if (time === 0) continue;
             const difficulty = difficulties[i];
-            const peakHeight = (time / 500) * maxHeight; // Scale height by time
-            const peakBaseWidth = difficulty * 15; // Scale width by difficulty
+            const angle = (i / 7) * 2 * Math.PI - Math.PI / 2; // Start at top, spread evenly
+            const radius = (time / 500) * maxRadius; // Scale radius by time
+            const thickness = difficulty * 10; // Scale thickness by difficulty
 
-            const x = i * peakWidth + peakWidth / 2;
+            const x1 = centerX + Math.cos(angle) * thickness / 2;
+            const y1 = centerY + Math.sin(angle) * thickness / 2;
+            const x2 = centerX + Math.cos(angle) * (radius + thickness / 2);
+            const y2 = centerY + Math.sin(angle) * (radius + thickness / 2);
+            const x3 = centerX + Math.cos(angle + Math.PI / 7) * (radius + thickness / 2);
+            const y3 = centerY + Math.sin(angle + Math.PI / 7) * (radius + thickness / 2);
+            const x4 = centerX + Math.cos(angle + Math.PI / 7) * thickness / 2;
+            const y4 = centerY + Math.sin(angle + Math.PI / 7) * thickness / 2;
+
             masteryCtx.beginPath();
-            masteryCtx.moveTo(x - peakBaseWidth, baseY);
-            masteryCtx.lineTo(x, baseY - peakHeight);
-            masteryCtx.lineTo(x + peakBaseWidth, baseY);
+            masteryCtx.moveTo(x1, y1);
+            masteryCtx.lineTo(x2, y2);
+            masteryCtx.lineTo(x3, y3);
+            masteryCtx.lineTo(x4, y4);
             masteryCtx.closePath();
             masteryCtx.fillStyle = earthTones[i];
             masteryCtx.fill();
@@ -217,34 +234,33 @@ document.addEventListener('DOMContentLoaded', () => {
             masteryCtx.lineWidth = 1;
             masteryCtx.stroke();
 
-            // Add label below the peak
+            // Add label near the column
+            const labelX = centerX + Math.cos(angle) * (radius + 20);
+            const labelY = centerY + Math.sin(angle) * (radius + 20);
             masteryCtx.fillStyle = '#333';
             masteryCtx.font = '14px Arial';
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
-            masteryCtx.fillText(`Level ${i + 1}`, x, baseY + 30);
+            masteryCtx.fillText(`Level ${i + 1}`, labelX, labelY);
         }
 
-        // Draw infinity cloud if ample time past Level 4
+        // Draw infinity ring if ample time past Level 4
         if (ampleTimePastLevel4) {
-            masteryCtx.save();
-            masteryCtx.translate(width / 2, 50); // Position cloud at top center
             masteryCtx.beginPath();
-            const cloudSize = 50;
+            const outerRadius = maxRadius + 20;
             const tSteps = 100;
             for (let t = 0; t <= tSteps; t++) {
                 const tParam = (t / tSteps) * 2 * Math.PI;
-                const r = cloudSize * Math.sqrt(2) * Math.cos(tParam) / (Math.sin(tParam) * Math.sin(tParam) + 1);
-                const x = r * Math.cos(tParam);
-                const y = r * Math.sin(tParam);
+                const r = outerRadius;
+                const x = centerX + Math.cos(tParam) * r;
+                const y = centerY + Math.sin(tParam) * r;
                 if (t === 0) masteryCtx.moveTo(x, y);
                 else masteryCtx.lineTo(x, y);
             }
             masteryCtx.closePath();
-            masteryCtx.strokeStyle = '#D2B48C'; // Tan cloud
+            masteryCtx.strokeStyle = '#D2B48C'; // Tan infinity ring
             masteryCtx.lineWidth = 5;
             masteryCtx.stroke();
-            masteryCtx.restore();
         }
 
         // Add central text
@@ -252,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         masteryCtx.font = '24px Arial';
         masteryCtx.textAlign = 'center';
         masteryCtx.textBaseline = 'middle';
-        masteryCtx.fillText(`Mastery Progress: ${level}`, width / 2, 30);
+        masteryCtx.fillText(`Mastery Progress: ${level}`, centerX, centerY);
     }
 
     // Download canvas as image
