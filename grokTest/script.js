@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             for (let t = 0; t <= steps; t++) {
                 const angle = angleStart + (t / steps) * (angleEnd - angleStart);
-                const r = radius + Math.sin((t / steps) * Math.PI) * (difficulty * 5);
+                const r = radius + Math.sin((t / steps) * Math.PI) * (difficulty * 5 * scaleFactor);
                 const x = centerX + Math.cos(angle) * r;
                 const y = centerY + Math.sin(angle) * r;
                 if (t === 0 && i === 0) previewCtx.moveTo(x, y);
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             previewCtx.moveTo(centerX, centerY);
             for (let t = 0; t <= 10; t++) {
                 const angle = angleStart + (t / 10) * (angleEnd - angleStart);
-                const r = radius + Math.sin((t / 10) * Math.PI) * (answers.difficulties[i] * 5);
+                const r = radius + Math.sin((t / 10) * Math.PI) * (answers.difficulties[i] * 5 * scaleFactor);
                 const x = centerX + Math.cos(angle) * r;
                 const y = centerY + Math.sin(angle) * r;
                 previewCtx.lineTo(x, y);
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const time = answers.times[i];
             const difficulty = answers.difficulties[i];
             const angle = (i / 7) * 2 * Math.PI - Math.PI / 2;
-            const radius = baseRadius + (time * scaleFactor) + (difficulty * 5);
+            const radius = baseRadius + (time * scaleFactor) + (difficulty * 5 * scaleFactor);
             const labelX = centerX + Math.cos(angle) * (radius + 20 * scaleFactor);
             const labelY = centerY + Math.sin(angle) * (radius + 20 * scaleFactor);
             previewCtx.fillStyle = '#333';
@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const segmentProportions = times.map(val => (val / totalPoints) * 2 * Math.PI);
 
         // Draw the final mastery symbol
-        drawMasterySymbol(masteryProgressScore, segmentProportions, difficulties, hasHigherLevels, times);
+        drawMasterySymbol(masteryProgressScore, segmentProportions, difficulties, hasHigherLevels, times, topic);
 
         // Future projections
         const projectLevel = (years) => {
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Function to draw the final mastery symbol as a Mastery Blossom
-    function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times) {
+    function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times, topic) {
         const width = masteryCanvas.width;
         const height = masteryCanvas.height;
         masteryCtx.clearRect(0, 0, width, height);
@@ -325,22 +325,22 @@ document.addEventListener('DOMContentLoaded', () => {
             masteryCtx.stroke();
 
             // Overlay time label
-            const labelRadius = radius + (difficulty * 5 * scaleFactor) + (20 * scaleFactor);
+            const labelRadius = radius + (difficulty * 5 * scaleFactor) + (30 * scaleFactor); // Increased offset to avoid overlap
             const labelAngle = (angleStart + angleEnd) / 2;
             const labelX = centerX + Math.cos(labelAngle) * labelRadius;
             const labelY = centerY + Math.sin(labelAngle) * labelRadius;
             masteryCtx.fillStyle = '#333';
-            masteryCtx.font = '12px Arial';
+            masteryCtx.font = `${Math.max(10, 12 * scaleFactor)}px Arial`; // Scale font size
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
             masteryCtx.fillText(timeLabels[time], labelX, labelY);
 
             // Add level label near the center of the petal
-            const levelLabelRadius = radius / 2;
+            const levelLabelRadius = Math.max(radius / 2, baseRadius * 1.5); // Ensure label is visible even for small petals
             const levelLabelX = centerX + Math.cos(labelAngle) * levelLabelRadius;
             const levelLabelY = centerY + Math.sin(labelAngle) * levelLabelRadius;
             masteryCtx.fillStyle = '#333';
-            masteryCtx.font = '12px Arial';
+            masteryCtx.font = `${Math.max(8, 12 * scaleFactor)}px Arial`;
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
             masteryCtx.fillText(`Level ${i + 1}`, levelLabelX, levelLabelY);
@@ -365,36 +365,27 @@ document.addEventListener('DOMContentLoaded', () => {
             masteryCtx.stroke();
         }
 
-        // Add title at the top with high contrast
-        const titleText = `Mastery Progress: ${level}`;
-        masteryCtx.font = 'bold 24px Arial';
+        // Add title at the top with high contrast and discipline
+        const titleText = `${topic} Mastery Progress: ${level}`;
+        masteryCtx.font = 'bold 24px Georgia, Arial, sans-serif'; // More elegant font
         masteryCtx.textAlign = 'center';
         masteryCtx.textBaseline = 'middle';
-
-        // Measure text to create background rectangle
-        const textMetrics = masteryCtx.measureText(titleText);
-        const textWidth = textMetrics.width;
-        const textHeight = 24; // Approximate height of 24px font
-        const paddingX = 10;
-        const paddingY = 5;
         const titleX = centerX;
-        const titleY = centerY - targetRadius - 10; // Position above the blossom with slight overlap
+        const titleY = centerY - targetRadius - 10; // Position above the blossom
 
-        // Draw white background rectangle with padding
-        masteryCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        masteryCtx.fillRect(
-            titleX - textWidth / 2 - paddingX,
-            titleY - textHeight / 2 - paddingY,
-            textWidth + 2 * paddingX,
-            textHeight + 2 * paddingY
-        );
-
-        // Draw text with stroke for extra contrast
+        // Add shadow for contrast instead of background
+        masteryCtx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+        masteryCtx.shadowBlur = 5;
+        masteryCtx.shadowOffsetX = 2;
+        masteryCtx.shadowOffsetY = 2;
         masteryCtx.fillStyle = '#333';
-        masteryCtx.strokeStyle = '#000';
-        masteryCtx.lineWidth = 1;
         masteryCtx.fillText(titleText, titleX, titleY);
-        masteryCtx.strokeText(titleText, titleX, titleY);
+
+        // Reset shadow for other elements
+        masteryCtx.shadowColor = 'transparent';
+        masteryCtx.shadowBlur = 0;
+        masteryCtx.shadowOffsetX = 0;
+        masteryCtx.shadowOffsetY = 0;
     }
 
     // Download canvas as image
