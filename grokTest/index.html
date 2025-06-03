@@ -1,1 +1,258 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
 
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastery Signature</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Mastery Signature</h1>
+        <div id="intro-section">
+            <p>Welcome to Mastery Signature! This tool helps you visualize your journey toward mastering any skill or discipline. Answer questions about your time and effort across seven levels of mastery, from initial exposure to innovation. Your unique "mastery signature" will be displayed as a colorful circular symbol, with segments reflecting your experience and thickness showing the challenge level. Use the results to set goals and plan your growth!</p>
+        </div>
+        <section id="form-section">
+            <form id="mastery-form">
+                <div class="question active">
+                    <h2>What are you mastering?</h2>
+                    <input type="text" name="mastery-topic" placeholder="e.g., Python Programming, Painting, Martial Arts" required aria-label="Enter the skill or discipline you are mastering">
+                </div>
+                <div class="question">
+                    <h2>Level 1: Initial Exposure</h2>
+                    <p>How many hours per week do you engage in an experience within your discipline that is both engaging and challenging, providing motivation to keep going?</p>
+                    <select name="time1" required aria-label="Time spent on initial exposure">
+                        <option value="">Select an option</option>
+                        <option value="0">None</option>
+                        <option value="1">Less than 1 hour</option>
+                        <option value="5">1-5 hours</option>
+                        <option value="10">5-10 hours</option>
+                        <option value="20">10-20 hours</option>
+                        <option value="40">20-40 hours</option>
+                        <option value="60">40-60 hours</option>
+                        <option value="80">60+ hours</option>
+                    </select>
+                    <p>Difficulty (1-5, where 5 is very challenging but rewarding):</p>
+                    <select name="diff1" required aria-label="Difficulty of initial exposure">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <!-- Repeat for Levels 2-7 with appropriate time scales -->
+                <div class="question">
+                    <h2>Level 2: Learning Known Knowledge</h2>
+                    <p>How much time have you spent learning what is already known about a topic within your discipline?</p>
+                    <select name="time2" required aria-label="Time spent learning known knowledge">
+                        <option value="">Select an option</option>
+                        <option value="0">None</option>
+                        <option value="1">Hours</option>
+                        <option value="5">Days</option>
+                        <option value="20">Weeks</option>
+                        <option value="50">Months</option>
+                        <option value="100">1-2 Years</option>
+                        <option value="200">2-5 Years</option>
+                        <option value="500">5+ Years</option>
+                    </select>
+                    <p>Difficulty (1-5, where 5 is very challenging but rewarding):</p>
+                    <select name="diff2" required aria-label="Difficulty of learning known knowledge">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <div class="question">
+                    <h2>Level 3: Active Application</h2>
+                    <p>How much time have you dedicated to actively applying your knowledge within your discipline?</p>
+                    <select name="time3" required aria-label="Time spent on active application">
+                        <option value="">Select an option</option>
+                        <option value="0">None</option>
+                        <option value="1">Hours</option>
+                        <option value="5">Days</option>
+                        <option value="20">Weeks</option>
+                        <option value="50">Months</option>
+                        <option value="100">1-2 Years</option>
+                        <option value="200">2-5 Years</option>
+                        <option value="500">5+ Years</option>
+                    </select>
+                    <p>Difficulty (1-5, where 5 is very challenging but rewarding):</p>
+                    <select name="diff3" required aria-label="Difficulty of active application">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <div class="question">
+                    <h2>Level 4: Reflection</h2>
+                    <p>How much time have you spent reflecting on your experiences and learning within your discipline?</p>
+                    <select name="time4" required aria-label="Time spent on reflection">
+                        <option value="">Select an option</option>
+                        <option value="0">None</option>
+                        <option value="1">Hours</option>
+                        <option value="5">Days</option>
+                        <option value="20">Weeks</option>
+                        <option value="50">Months</option>
+                        <option value="100">1-2 Years</option>
+                        <option value="200">2-5 Years</option>
+                        <option value="500">5+ Years</option>
+                    </select>
+                    <p>Difficulty (1-5, where 5 is very challenging but rewarding):</p>
+                    <select name="diff4" required aria-label="Difficulty of reflection">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <div class="question">
+                    <h2>Level 5: Integration</h2>
+                    <p>How much time have you spent integrating your knowledge and skills across different areas within your discipline?</p>
+                    <select name="time5" required aria-label="Time spent on integration">
+                        <option value="">Select an option</option>
+                        <option value="0">None</option>
+                        <option value="1">Hours</option>
+                        <option value="5">Days</option>
+                        <option value="20">Weeks</option>
+                        <option value="50">Months</option>
+                        <option value="100">1-2 Years</option>
+                        <option value="200">2-5 Years</option>
+                        <option value="500">5+ Years</option>
+                    </select>
+                    <p>Difficulty (1-5, where 5 is very challenging but rewarding):</p>
+                    <select name="diff5" required aria-label="Difficulty of integration">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <div class="question">
+                    <h2>Level 6: Contribution</h2>
+                    <p>How much time have you devoted to contributing to your discipline, whether through teaching, mentoring, or creating new work?</p>
+                    <select name="time6" required aria-label="Time spent on contribution">
+                        <option value="">Select an option</option>
+                        <option value="0">None</option>
+                        <option value="1">Hours</option>
+                        <option value="5">Days</option>
+                        <option value="20">Weeks</option>
+                        <option value="50">Months</option>
+                        <option value="100">1-2 Years</option>
+                        <option value="200">2-5 Years</option>
+                        <option value="500">5+ Years</option>
+                    </select>
+                    <p>Difficulty (1-5, where 5 is very challenging but rewarding):</p>
+                    <select name="diff6" required aria-label="Difficulty of contribution">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <div class="question">
+                    <h2>Level 7: Innovation</h2>
+                    <p>How much time have you spent creating something new within your discipline?</p>
+                    <select name="time7" required aria-label="Time spent on innovation">
+                        <option value="">Select an option</option>
+                        <option value="0">None</option>
+                        <option value="1">Hours</option>
+                        <option value="5">Days</option>
+                        <option value="20">Weeks</option>
+                        <option value="50">Months</option>
+                        <option value="100">1-2 Years</option>
+                        <option value="200">2-5 Years</option>
+                        <option value="500">5+ Years</option>
+                    </select>
+                    <p>Difficulty (1-5, where 5 is very challenging but rewarding):</p>
+                    <select name="diff7" required aria-label="Difficulty of innovation">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <div class="navigation">
+                    <button type="button" id="prev-btn" disabled>Previous</button>
+                    <button type="button" id="next-btn">Next</button>
+                    <button type="submit" id="submit-btn" style="display: none;">Submit</button>
+                </div>
+            </form>
+            <h3>Preview Your Mastery Signature</h3>
+            <canvas id="preview-canvas" width="500" height="200"></canvas>
+        </section>
+        <section id="result-section" style="display: none;">
+            <h2>Your Mastery Signature</h2>
+            <p>You are mastering: <strong id="result-topic"></strong></p>
+            <p>Average Mastery Level: <strong id="result-level"></strong></p>
+            <p>Classification: <strong id="result-tier"></strong></p>
+            <p>Your mastery signature is a circular visualization where each segment represents a level of mastery. The length of each segment shows the time invested, and the thickness reflects the difficulty. Use this to understand your current progress and plan your journey forward.</p>
+            <canvas id="mastery-canvas" width="500" height="500"></canvas>
+            <div class="canvas-actions">
+                <button id="download-btn">Download Signature</button>
+                <button id="copy-btn">Copy to Clipboard</button>
+                <button id="restart-btn">Start Over</button>
+            </div>
+            <h3>Future Projections</h3>
+            <p>Based on your current progress, here’s where you could be with consistent effort:</p>
+            <ul>
+                <li>In 1 year: Level <span id="proj-1-year"></span></li>
+                <li>In 5 years: Level <span id="proj-5-years"></span></li>
+                <li>In 10 years: Level <span id="proj-10-years"></span></li>
+                <li>In 25 years: Level <span id="proj-25-years"></span></li>
+                <li>In 50 years: Level <span id="proj-50-years"></span></li>
+            </ul>
+            <h3>Next Steps</h3>
+            <p id="next-steps"></p>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

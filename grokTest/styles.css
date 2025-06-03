@@ -1,0 +1,134 @@
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    color: #222;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+h2 {
+    color: #333;
+    font-size: 1.8em;
+    margin: 15px 0;
+}
+
+h3 {
+    color: #444;
+    font-size: 1.4em;
+    margin: 10px 0;
+}
+
+#intro-section {
+    background: #e8f0fe;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.question {
+    display: none;
+}
+
+.question.active {
+    display: block;
+}
+
+select, input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+p {
+    margin: 10px 0;
+    color: #555;
+}
+
+.navigation {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+button:hover:not(:disabled) {
+    transform: scale(1.05);
+}
+
+#prev-btn {
+    background-color: #cccccc;
+    color: #333;
+}
+
+#prev-btn:disabled {
+    background-color: #e0e0e0;
+    cursor: not-allowed;
+}
+
+#next-btn, #submit-btn, #download-btn, #copy-btn, #restart-btn {
+    background-color: #007BFF;
+    color: white;
+}
+
+#next-btn:hover, #submit-btn:hover, #download-btn:hover, #copy-btn:hover, #restart-btn:hover {
+    background-color: #0056b3;
+}
+
+#preview-canvas, #mastery-canvas {
+    margin: 20px auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.canvas-actions {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+
+    #preview-canvas, #mastery-canvas {
+        width: 100%;
+        height: auto;
+    }
+}
