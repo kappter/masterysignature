@@ -92,21 +92,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const centerX = width / 2;
         const centerY = height / 2;
         const maxRadius = Math.min(width, height) / 2 - 40;
-        const baseRadius = 20; // Minimum radius for petals with no time
+        const baseRadius = 20;
+
+        // Determine the maximum time to scale the radius
+        const maxTime = Math.max(...(answers.times.length > 0 ? answers.times : [0]), 0);
+        const scaleFactor = maxTime > 0 ? (maxRadius - baseRadius) / maxTime : 1;
 
         // Draw the connected blossom shape
         previewCtx.beginPath();
         for (let i = 0; i < 7; i++) {
             const time = i < answers.times.length ? answers.times[i] : 0;
             const difficulty = i < answers.difficulties.length ? answers.difficulties[i] : 1;
-            const radius = time > 0 ? baseRadius + (time / 500) * (maxRadius - baseRadius) : baseRadius;
+            const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
             const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
             const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
-            const steps = 10; // Smoothness of petal curve
+            const steps = 10;
 
             for (let t = 0; t <= steps; t++) {
                 const angle = angleStart + (t / steps) * (angleEnd - angleStart);
-                const r = radius + Math.sin((t / steps) * Math.PI) * (difficulty * 5); // Petal shape modulation
+                const r = radius + Math.sin((t / steps) * Math.PI) * (difficulty * 5);
                 const x = centerX + Math.cos(angle) * r;
                 const y = centerY + Math.sin(angle) * r;
                 if (t === 0 && i === 0) previewCtx.moveTo(x, y);
@@ -121,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
             const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
             const time = answers.times[i];
-            const radius = baseRadius + (time / 500) * (maxRadius - baseRadius);
+            const radius = baseRadius + (time * scaleFactor);
 
             const gradient = previewCtx.createLinearGradient(
                 centerX, centerY,
@@ -154,9 +158,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const time = answers.times[i];
             const difficulty = answers.difficulties[i];
             const angle = (i / 7) * 2 * Math.PI - Math.PI / 2;
-            const radius = baseRadius + (time / 500) * (maxRadius - baseRadius) + (difficulty * 5);
-            const labelX = centerX + Math.cos(angle) * (radius + 20);
-            const labelY = centerY + Math.sin(angle) * (radius + 20);
+            const radius = baseRadius + (time * scaleFactor) + (difficulty * 5);
+            const labelX = centerX + Math.cos(angle) * (radius + 20 * scaleFactor);
+            const labelY = centerY + Math.sin(angle) * (radius + 20 * scaleFactor);
             previewCtx.fillStyle = '#333';
             previewCtx.font = '12px Arial';
             previewCtx.textAlign = 'center';
@@ -256,8 +260,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const centerX = width / 2;
         const centerY = height / 2;
-        const maxRadius = Math.min(width, height) / 2 - 50;
-        const baseRadius = 30; // Minimum radius for petals with no time
+        const maxCanvasRadius = Math.min(width, height) / 2;
+        const baseRadius = 30;
+
+        // Determine the maximum time to scale the radius
+        const maxTime = Math.max(...times, 0);
+        const targetRadius = maxTime > 0 ? maxCanvasRadius - 20 : maxCanvasRadius / 2; // Leave 20px for infinity ring or padding
+        const scaleFactor = maxTime > 0 ? (targetRadius - baseRadius) / maxTime : 1;
 
         // Check for ample time past Level 4
         const ampleTimePastLevel4 = times.slice(4).reduce((sum, val) => sum + val, 0) > 100;
@@ -267,14 +276,14 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < 7; i++) {
             const time = times[i];
             const difficulty = difficulties[i];
-            const radius = time > 0 ? baseRadius + (time / 500) * (maxRadius - baseRadius) : baseRadius;
+            const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
             const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
             const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
-            const steps = 20; // Smoothness of petal curve
+            const steps = 20;
 
             for (let t = 0; t <= steps; t++) {
                 const angle = angleStart + (t / steps) * (angleEnd - angleStart);
-                const r = radius + Math.sin((t / steps) * Math.PI) * (difficulty * 5); // Petal shape modulation
+                const r = radius + Math.sin((t / steps) * Math.PI) * (difficulty * 5 * scaleFactor);
                 const x = centerX + Math.cos(angle) * r;
                 const y = centerY + Math.sin(angle) * r;
                 if (t === 0 && i === 0) masteryCtx.moveTo(x, y);
@@ -287,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < 7; i++) {
             const time = times[i];
             const difficulty = difficulties[i];
-            const radius = time > 0 ? baseRadius + (time / 500) * (maxRadius - baseRadius) : baseRadius;
+            const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
             const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
             const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
 
@@ -303,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
             masteryCtx.moveTo(centerX, centerY);
             for (let t = 0; t <= 20; t++) {
                 const angle = angleStart + (t / 20) * (angleEnd - angleStart);
-                const r = radius + Math.sin((t / 20) * Math.PI) * (difficulty * 5);
+                const r = radius + Math.sin((t / 20) * Math.PI) * (difficulty * 5 * scaleFactor);
                 const x = centerX + Math.cos(angle) * r;
                 const y = centerY + Math.sin(angle) * r;
                 masteryCtx.lineTo(x, y);
@@ -316,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
             masteryCtx.stroke();
 
             // Overlay time label
-            const labelRadius = radius + (difficulty * 5) + 20;
+            const labelRadius = radius + (difficulty * 5 * scaleFactor) + (20 * scaleFactor);
             const labelAngle = (angleStart + angleEnd) / 2;
             const labelX = centerX + Math.cos(labelAngle) * labelRadius;
             const labelY = centerY + Math.sin(labelAngle) * labelRadius;
@@ -340,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Draw infinity ring if ample time past Level 4
         if (ampleTimePastLevel4) {
             masteryCtx.beginPath();
-            const outerRadius = maxRadius + 20;
+            const outerRadius = targetRadius + 20;
             const tSteps = 100;
             for (let t = 0; t <= tSteps; t++) {
                 const tParam = (t / tSteps) * 2 * Math.PI;
@@ -356,12 +365,36 @@ document.addEventListener('DOMContentLoaded', () => {
             masteryCtx.stroke();
         }
 
-        // Add central text
-        masteryCtx.fillStyle = '#333';
-        masteryCtx.font = '24px Arial';
+        // Add title at the top with high contrast
+        const titleText = `Mastery Progress: ${level}`;
+        masteryCtx.font = 'bold 24px Arial';
         masteryCtx.textAlign = 'center';
         masteryCtx.textBaseline = 'middle';
-        masteryCtx.fillText(`Mastery Progress: ${level}`, centerX, centerY);
+
+        // Measure text to create background rectangle
+        const textMetrics = masteryCtx.measureText(titleText);
+        const textWidth = textMetrics.width;
+        const textHeight = 24; // Approximate height of 24px font
+        const paddingX = 10;
+        const paddingY = 5;
+        const titleX = centerX;
+        const titleY = centerY - targetRadius - 10; // Position above the blossom with slight overlap
+
+        // Draw white background rectangle with padding
+        masteryCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        masteryCtx.fillRect(
+            titleX - textWidth / 2 - paddingX,
+            titleY - textHeight / 2 - paddingY,
+            textWidth + 2 * paddingX,
+            textHeight + 2 * paddingY
+        );
+
+        // Draw text with stroke for extra contrast
+        masteryCtx.fillStyle = '#333';
+        masteryCtx.strokeStyle = '#000';
+        masteryCtx.lineWidth = 1;
+        masteryCtx.fillText(titleText, titleX, titleY);
+        masteryCtx.strokeText(titleText, titleX, titleY);
     }
 
     // Download canvas as image
