@@ -51,12 +51,15 @@ input[type="text"], select {
 }
 
 input[type="color"] {
-    width: auto; /* Allow default size */
-    padding: 0; /* Remove padding to avoid interference */
-    margin: 5px 0 15px 0;
-    border: none; /* Remove border for default look */
-    cursor: pointer; /* Indicate interactivity */
-    background: none; /* Ensure no background interference */
+    display: inline-block; /* Ensure inline with text */
+    width: 30px; /* Fixed width for rectangle */
+    height: 30px; /* Fixed height for rectangle */
+    padding: 0; /* Remove padding */
+    margin: 0 5px; /* Small spacing */
+    border: none; /* Remove border */
+    vertical-align: middle; /* Align with text baseline */
+    cursor: pointer;
+    background: none;
 }
 
 select {
