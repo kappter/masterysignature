@@ -41,13 +41,22 @@ form {
     display: block;
 }
 
-input[type="text"], select, input[type="color"] {
+input[type="text"], select {
     width: 100%;
     padding: 10px;
     margin: 5px 0 15px 0;
     border: 1px solid #ddd;
     border-radius: 4px;
     box-sizing: border-box;
+}
+
+input[type="color"] {
+    width: auto; /* Allow default size */
+    padding: 0; /* Remove padding to avoid interference */
+    margin: 5px 0 15px 0;
+    border: none; /* Remove border for default look */
+    cursor: pointer; /* Indicate interactivity */
+    background: none; /* Ensure no background interference */
 }
 
 select {
