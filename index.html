@@ -234,8 +234,11 @@
             <p>You are mastering: <strong id="result-topic"></strong></p>
             <p>Mastery Progress Score (1-7): <strong id="result-level"></strong></p>
             <p>Classification: <strong id="result-tier"></strong></p>
-            <p>Your mastery signature is a blossom, with each petal representing a level: the "first kiss" of Initial Experience, General Education, Experience (doing), Extending the Passion through sharing, Amalgamation via concept pairing, Contribution through publications or titles, and the rare Innovation (e.g., Newton’s calculus). Petals show time invested, width reflects difficulty, and time labels highlight your effort. Shorter petals signal areas to focus on.</p>
-            <canvas id="mastery-canvas" width="500" height="500"></canvas>
+            <p>Your mastery signature is a blossom, with each petal representing a level: the "first kiss" of Initial Experience, General Education, Experience (doing), Extending the Passion through sharing, Amalgamation via concept pairing, Contribution through publications or titles, and the rare Innovation (e.g., Newton’s calculus). Petals show time invested, width reflects difficulty, and time labels highlight your effort. Shorter petals signal areas to focus on. Hover over smaller petals for details.</p>
+            <div class="canvas-wrapper">
+                <canvas id="mastery-canvas" width="500" height="500"></canvas>
+                <div id="tooltip" class="tooltip" style="display: none;"></div>
+            </div>
             <div class="canvas-actions">
                 <button id="download-btn">Download Signature</button>
                 <button id="copy-btn">Copy to Clipboard</button>

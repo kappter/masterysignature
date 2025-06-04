@@ -13,21 +13,64 @@ document.addEventListener('DOMContentLoaded', () => {
     const restartBtn = document.getElementById('restart-btn');
     const previewCtx = previewCanvas.getContext('2d');
     const masteryCtx = masteryCanvas.getContext('2d');
+    const tooltip = document.getElementById('tooltip');
     let currentQuestion = 0;
     let answers = { times: [], difficulties: [] };
+    let petalRegions = []; // Store petal regions for hover detection
 
-    // Function to generate shades from a base color
-    function generateShades(baseColor) {
+    // Time value to label mapping
+    const timeLabels = {
+        0: 'None',
+        1: 'Hours',
+        5: 'Days',
+        20: 'Weeks',
+        50: 'Months',
+        100: '1-2 Years',
+        200: '2-5 Years',
+        500: '5+ Years',
+        10: '5-10 hours',
+        40: '20-40 hours',
+        60: '40-60 hours',
+        80: '60+ hours'
+    };
+
+    // Calculate luminance to determine text contrast
+    function calculateLuminance(hexColor) {
+        const r = parseInt(hexColor.slice(1, 3), 16);
+        const g = parseInt(hexColor.slice(3, 5), 16);
+        const b = parseInt(hexColor.slice(5, 7), 16);
+        // Relative luminance formula (simplified)
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    }
+
+    function getContrastColor(hexColor) {
+        return calculateLuminance(hexColor) > 0.5 ? '#333' : '#fff';
+    }
+
+    // Function to generate shades based on time (lighter for more time)
+    function generateShades(baseColor, times) {
         const r = parseInt(baseColor.slice(1, 3), 16);
         const g = parseInt(baseColor.slice(3, 5), 16);
         const b = parseInt(baseColor.slice(5, 7), 16);
+        const maxTime = Math.max(...times.filter(t => t > 0), 1);
         const shades = [];
         for (let i = 0; i < 7; i++) {
-            const factor = 1 - (i * 0.1); // Darker shades as level increases
-            const rShade = Math.round(r * factor);
-            const gShade = Math.round(g * factor);
-            const bShade = Math.round(b * factor);
-            shades.push([`#${rShade.toString(16).padStart(2, '0')}${gShade.toString(16).padStart(2, '0')}${bShade.toString(16).padStart(2, '0')}`, baseColor]);
+            const time = times[i];
+            if (time === 0) {
+                shades.push([baseColor, baseColor]); // Default for zero time
+                continue;
+            }
+            const lightnessFactor = time / maxTime; // 0 to 1, higher time = lighter
+            const rShade = Math.round(r + (255 - r) * lightnessFactor);
+            const gShade = Math.round(g + (255 - g) * lightnessFactor);
+            const bShade = Math.round(b + (255 - b) * lightnessFactor);
+            const darkerR = Math.round(r * (1 - lightnessFactor * 0.3));
+            const darkerG = Math.round(g * (1 - lightnessFactor * 0.3));
+            const darkerB = Math.round(b * (1 - lightnessFactor * 0.3));
+            shades.push([
+                `#${darkerR.toString(16).padStart(2, '0')}${darkerG.toString(16).padStart(2, '0')}${darkerB.toString(16).padStart(2, '0')}`,
+                `#${rShade.toString(16).padStart(2, '0')}${gShade.toString(16).padStart(2, '0')}${bShade.toString(16).padStart(2, '0')}`
+            ]);
         }
         return shades;
     }
@@ -110,7 +153,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Apply gradient fill with dynamic shades
         const baseColor = form.querySelector('input[name="passion-color"]').value || '#2C69CE';
-        const gradientColors = generateShades(baseColor);
+        const times = Array(7).fill(0);
+        for (let i = 0; i < answers.times.length; i++) times[i] = answers.times[i];
+        const gradientColors = generateShades(baseColor, times);
+        const textColor = getContrastColor(baseColor);
+
         for (let i = 0; i < 7; i++) {
             if (i >= answers.times.length || answers.times[i] === 0) continue;
             const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
@@ -152,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const radius = baseRadius + (time * scaleFactor) + (difficulty * 5 * scaleFactor);
             const labelX = centerX + Math.cos(angle) * (radius + 20 * scaleFactor);
             const labelY = centerY + Math.sin(angle) * (radius + 20 * scaleFactor);
-            previewCtx.fillStyle = '#333';
+            previewCtx.fillStyle = textColor;
             previewCtx.font = '12px Arial';
             previewCtx.textAlign = 'center';
             previewCtx.textBaseline = 'middle';
@@ -170,6 +217,177 @@ document.addEventListener('DOMContentLoaded', () => {
         if (averageTime <= 300) return 5;
         if (averageTime <= 400) return 6;
         return 7;
+    }
+
+    // Function to draw the final mastery symbol as a Mastery Blossom
+    function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times, topic, passionColor) {
+        const width = masteryCanvas.width;
+        const height = masteryCanvas.height;
+        masteryCtx.clearRect(0, 0, width, height);
+        petalRegions = []; // Reset petal regions
+
+        // Background sky
+        masteryCtx.fillStyle = '#E6E6FA'; // Light lavender sky
+        masteryCtx.fillRect(0, 0, width, height);
+
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const maxCanvasRadius = Math.min(width, height) / 2;
+        const baseRadius = 30;
+
+        // Determine the maximum time to scale the radius
+        const maxTime = Math.max(...times, 0);
+        const targetRadius = maxTime > 0 ? maxCanvasRadius - 20 : maxCanvasRadius / 2;
+        const scaleFactor = maxTime > 0 ? (targetRadius - baseRadius) / maxTime : 1;
+
+        // Check for ample time past Level 4
+        const ampleTimePastLevel4 = times.slice(4).reduce((sum, val) => sum + val, 0) > 100;
+
+        // Generate shades based on time
+        const gradientColors = generateShades(passionColor || '#2C69CE', times);
+        const textColor = getContrastColor(passionColor || '#2C69CE');
+
+        // Draw the connected blossom shape
+        masteryCtx.beginPath();
+        for (let i = 0; i < 7; i++) {
+            const time = times[i];
+            const difficulty = difficulties[i];
+            const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
+            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
+            const steps = 20;
+
+            for (let t = 0; t <= steps; t++) {
+                const angle = angleStart + (t / steps) * (angleEnd - angleStart);
+                const r = radius + Math.sin((t / steps) * Math.PI) * (difficulty * 5 * scaleFactor);
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                if (t === 0 && i === 0) masteryCtx.moveTo(x, y);
+                else masteryCtx.lineTo(x, y);
+            }
+        }
+        masteryCtx.closePath();
+
+        // Apply gradient fill for each petal and store regions
+        for (let i = 0; i < 7; i++) {
+            const time = times[i];
+            const difficulty = difficulties[i];
+            const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
+            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
+
+            const gradient = masteryCtx.createLinearGradient(
+                centerX, centerY,
+                centerX + Math.cos((angleStart + angleEnd) / 2) * radius,
+                centerY + Math.sin((angleStart + angleEnd) / 2) * radius
+            );
+            gradient.addColorStop(0, gradientColors[i][0]);
+            gradient.addColorStop(1, gradientColors[i][1]);
+
+            masteryCtx.beginPath();
+            masteryCtx.moveTo(centerX, centerY);
+            const petalPath = new Path2D();
+            petalPath.moveTo(centerX, centerY);
+            for (let t = 0; t <= 20; t++) {
+                const angle = angleStart + (t / 20) * (angleEnd - angleStart);
+                const r = radius + Math.sin((t / 20) * Math.PI) * (difficulty * 5 * scaleFactor);
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                masteryCtx.lineTo(x, y);
+                petalPath.lineTo(x, y);
+            }
+            masteryCtx.closePath();
+            petalPath.closePath();
+            masteryCtx.fillStyle = gradient;
+            masteryCtx.fill();
+            masteryCtx.strokeStyle = '#333';
+            masteryCtx.lineWidth = 1;
+            masteryCtx.stroke();
+
+            // Store petal region for hover detection
+            petalRegions.push({
+                path: petalPath,
+                level: i + 1,
+                time: timeLabels[times[i]],
+                difficulty: difficulties[i],
+                radius: radius,
+                angleStart: angleStart,
+                angleEnd: angleEnd
+            });
+        }
+
+        // Draw infinity ring if ample time past Level 4
+        if (ampleTimePastLevel4) {
+            masteryCtx.beginPath();
+            const outerRadius = targetRadius + 20;
+            const tSteps = 100;
+            for (let t = 0; t <= tSteps; t++) {
+                const tParam = (t / tSteps) * 2 * Math.PI;
+                const r = outerRadius;
+                const x = centerX + Math.cos(tParam) * r;
+                const y = centerY + Math.sin(tParam) * r;
+                if (t === 0) masteryCtx.moveTo(x, y);
+                else masteryCtx.lineTo(x, y);
+            }
+            masteryCtx.closePath();
+            masteryCtx.strokeStyle = '#D2B48C';
+            masteryCtx.lineWidth = 5;
+            masteryCtx.stroke();
+        }
+
+        // Overlay time and level labels within bounds
+        for (let i = 0; i < 7; i++) {
+            const time = times[i];
+            const difficulty = difficulties[i];
+            const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
+            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
+            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
+            const labelAngle = (angleStart + angleEnd) / 2;
+
+            // Time label (only if petal is large enough)
+            if (time > 0 && radius > baseRadius + 20 * scaleFactor) {
+                const labelRadius = Math.min(radius * 0.7, targetRadius - 20);
+                const labelX = centerX + Math.cos(labelAngle) * labelRadius;
+                const labelY = centerY + Math.sin(labelAngle) * labelRadius;
+                masteryCtx.fillStyle = textColor;
+                masteryCtx.font = `${Math.max(8, 10 * scaleFactor)}px Arial`;
+                masteryCtx.textAlign = 'center';
+                masteryCtx.textBaseline = 'middle';
+                masteryCtx.fillText(timeLabels[time], labelX, labelY);
+            }
+
+            // Level label (always show, closer to center)
+            const levelLabelRadius = Math.max(baseRadius * 1.2, radius * 0.3);
+            const levelLabelX = centerX + Math.cos(labelAngle) * levelLabelRadius;
+            const levelLabelY = centerY + Math.sin(labelAngle) * levelLabelRadius;
+            masteryCtx.fillStyle = textColor;
+            masteryCtx.font = `${Math.max(6, 8 * scaleFactor)}px Arial`;
+            masteryCtx.textAlign = 'center';
+            masteryCtx.textBaseline = 'middle';
+            masteryCtx.fillText(`Level ${i + 1}`, levelLabelX, levelLabelY);
+        }
+
+        // Add title at the top with high contrast
+        const titleText = `${topic} Mastery Progress: ${level}`;
+        masteryCtx.font = 'bold 24px Georgia, Arial, sans-serif';
+        masteryCtx.textAlign = 'center';
+        masteryCtx.textBaseline = 'middle';
+        const titleX = centerX;
+        const titleY = centerY - targetRadius - 10;
+
+        // Add shadow for contrast
+        masteryCtx.shadowColor = calculateLuminance(passionColor || '#2C69CE') > 0.5 ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.8)';
+        masteryCtx.shadowBlur = 5;
+        masteryCtx.shadowOffsetX = 2;
+        masteryCtx.shadowOffsetY = 2;
+        masteryCtx.fillStyle = textColor;
+        masteryCtx.fillText(titleText, titleX, titleY);
+
+        // Reset shadow
+        masteryCtx.shadowColor = 'transparent';
+        masteryCtx.shadowBlur = 0;
+        masteryCtx.shadowOffsetX = 0;
+        masteryCtx.shadowOffsetY = 0;
     }
 
     // Form submission and result calculation
@@ -240,157 +458,38 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('next-steps').textContent = nextSteps;
     });
 
-    // Function to draw the final mastery symbol as a Mastery Blossom
-    function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times, topic, passionColor) {
-        const width = masteryCanvas.width;
-        const height = masteryCanvas.height;
-        masteryCtx.clearRect(0, 0, width, height);
+    // Tooltip handling for smaller petals
+    masteryCanvas.addEventListener('mousemove', (e) => {
+        const rect = masteryCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        let tooltipShown = false;
 
-        // Background sky
-        masteryCtx.fillStyle = '#E6E6FA'; // Light lavender sky
-        masteryCtx.fillRect(0, 0, width, height);
+        for (const region of petalRegions) {
+            const radius = region.radius;
+            const baseRadius = 30; // From drawMasterySymbol
+            const maxTime = Math.max(...petalRegions.map(r => r.radius), baseRadius);
+            const scaleFactor = maxTime > baseRadius ? (maxTime - baseRadius) / maxTime : 1;
 
-        const centerX = width / 2;
-        const centerY = height / 2;
-        const maxCanvasRadius = Math.min(width, height) / 2;
-        const baseRadius = 30;
-
-        // Determine the maximum time to scale the radius
-        const maxTime = Math.max(...times, 0);
-        const targetRadius = maxTime > 0 ? maxCanvasRadius - 20 : maxCanvasRadius / 2; // Leave 20px for infinity ring or padding
-        const scaleFactor = maxTime > 0 ? (targetRadius - baseRadius) / maxTime : 1;
-
-        // Check for ample time past Level 4
-        const ampleTimePastLevel4 = times.slice(4).reduce((sum, val) => sum + val, 0) > 100;
-
-        // Draw the connected blossom shape
-        masteryCtx.beginPath();
-        for (let i = 0; i < 7; i++) {
-            const time = times[i];
-            const difficulty = difficulties[i];
-            const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
-            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
-            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
-            const steps = 20;
-
-            for (let t = 0; t <= steps; t++) {
-                const angle = angleStart + (t / steps) * (angleEnd - angleStart);
-                const r = radius + Math.sin((t / steps) * Math.PI) * (difficulty * 5 * scaleFactor);
-                const x = centerX + Math.cos(angle) * r;
-                const y = centerY + Math.sin(angle) * r;
-                if (t === 0 && i === 0) masteryCtx.moveTo(x, y);
-                else masteryCtx.lineTo(x, y);
+            // Show tooltip if petal radius is small
+            if (radius < baseRadius + 20 * scaleFactor && masteryCtx.isPointInPath(region.path, x, y)) {
+                tooltip.innerHTML = `Level ${region.level}<br>Time: ${region.time}<br>Difficulty: ${region.difficulty}`;
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${e.clientX - rect.left + 15}px`;
+                tooltip.style.top = `${e.clientY - rect.top - 30}px`;
+                tooltipShown = true;
+                break;
             }
         }
-        masteryCtx.closePath();
 
-        // Apply gradient fill with dynamic shades
-        const gradientColors = generateShades(passionColor || '#2C69CE');
-        for (let i = 0; i < 7; i++) {
-            const time = times[i];
-            const difficulty = difficulties[i];
-            const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
-            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
-            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
-
-            const gradient = masteryCtx.createLinearGradient(
-                centerX, centerY,
-                centerX + Math.cos((angleStart + angleEnd) / 2) * radius,
-                centerY + Math.sin((angleStart + angleEnd) / 2) * radius
-            );
-            gradient.addColorStop(0, gradientColors[i][0]);
-            gradient.addColorStop(1, gradientColors[i][1]);
-
-            masteryCtx.beginPath();
-            masteryCtx.moveTo(centerX, centerY);
-            for (let t = 0; t <= 20; t++) {
-                const angle = angleStart + (t / 20) * (angleEnd - angleStart);
-                const r = radius + Math.sin((t / 20) * Math.PI) * (difficulty * 5 * scaleFactor);
-                const x = centerX + Math.cos(angle) * r;
-                const y = centerY + Math.sin(angle) * r;
-                masteryCtx.lineTo(x, y);
-            }
-            masteryCtx.closePath();
-            masteryCtx.fillStyle = gradient;
-            masteryCtx.fill();
-            masteryCtx.strokeStyle = '#333';
-            masteryCtx.lineWidth = 1;
-            masteryCtx.stroke();
+        if (!tooltipShown) {
+            tooltip.style.display = 'none';
         }
+    });
 
-        // Draw infinity ring if ample time past Level 4
-        if (ampleTimePastLevel4) {
-            masteryCtx.beginPath();
-            const outerRadius = targetRadius + 20;
-            const tSteps = 100;
-            for (let t = 0; t <= tSteps; t++) {
-                const tParam = (t / tSteps) * 2 * Math.PI;
-                const r = outerRadius;
-                const x = centerX + Math.cos(tParam) * r;
-                const y = centerY + Math.sin(tParam) * r;
-                if (t === 0) masteryCtx.moveTo(x, y);
-                else masteryCtx.lineTo(x, y);
-            }
-            masteryCtx.closePath();
-            masteryCtx.strokeStyle = '#D2B48C'; // Tan infinity ring
-            masteryCtx.lineWidth = 5;
-            masteryCtx.stroke();
-        }
-
-        // Overlay time and level labels within bounds
-        for (let i = 0; i < 7; i++) {
-            const time = times[i];
-            const difficulty = difficulties[i];
-            const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
-            const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
-            const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
-            const labelAngle = (angleStart + angleEnd) / 2;
-
-            // Time label
-            if (time > 0) {
-                const labelRadius = Math.min(radius * 0.7, targetRadius - 20); // Position within petal, not exceeding bounds
-                const labelX = centerX + Math.cos(labelAngle) * labelRadius;
-                const labelY = centerY + Math.sin(labelAngle) * labelRadius;
-                masteryCtx.fillStyle = '#333';
-                masteryCtx.font = `${Math.max(8, 10 * scaleFactor)}px Arial`; // Smaller label text
-                masteryCtx.textAlign = 'center';
-                masteryCtx.textBaseline = 'middle';
-                masteryCtx.fillText(timeLabels[time], labelX, labelY);
-            }
-
-            // Level label
-            const levelLabelRadius = Math.max(baseRadius * 1.2, radius * 0.3); // Closer to center, within petal
-            const levelLabelX = centerX + Math.cos(labelAngle) * levelLabelRadius;
-            const levelLabelY = centerY + Math.sin(labelAngle) * levelLabelRadius;
-            masteryCtx.fillStyle = '#333';
-            masteryCtx.font = `${Math.max(6, 8 * scaleFactor)}px Arial`; // Smaller label text
-            masteryCtx.textAlign = 'center';
-            masteryCtx.textBaseline = 'middle';
-            masteryCtx.fillText(`Level ${i + 1}`, levelLabelX, levelLabelY);
-        }
-
-        // Add title at the top with high contrast and discipline
-        const titleText = `${topic} Mastery Progress: ${level}`;
-        masteryCtx.font = 'bold 24px Georgia, Arial, sans-serif'; // More elegant font
-        masteryCtx.textAlign = 'center';
-        masteryCtx.textBaseline = 'middle';
-        const titleX = centerX;
-        const titleY = centerY - targetRadius - 10; // Position above the blossom
-
-        // Add shadow for contrast instead of background
-        masteryCtx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-        masteryCtx.shadowBlur = 5;
-        masteryCtx.shadowOffsetX = 2;
-        masteryCtx.shadowOffsetY = 2;
-        masteryCtx.fillStyle = '#333';
-        masteryCtx.fillText(titleText, titleX, titleY);
-
-        // Reset shadow for other elements
-        masteryCtx.shadowColor = 'transparent';
-        masteryCtx.shadowBlur = 0;
-        masteryCtx.shadowOffsetX = 0;
-        masteryCtx.shadowOffsetY = 0;
-    }
+    masteryCanvas.addEventListener('mouseleave', () => {
+        tooltip.style.display = 'none';
+    });
 
     // Download canvas as image
     downloadBtn.addEventListener('click', () => {
