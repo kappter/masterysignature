@@ -243,8 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Next steps
         const nextSteps = hasHigherLevels
-            ? `As an Advanced Learner, focus on deepening your contributions (Level 6) and exploring innovation (Level 7). Consider mentoring others or starting a project to push the boundaries of ${topic}.`
-            : `As a Tier One Candidate, continue building your foundation. Increase time spent on Levels 1-3 and seek more challenging tasks to progress toward Level 4 (Reflection) and beyond.`;
+            ? `As an Advanced Learner, deepen your Contribution (Level 6) or aim for Innovation (Level 7, like Newton’s calculus). Consider mentoring or a new project in ${topic}.`
+            : `As a Tier One Candidate, build your foundation with General Education (Level 2) and Experience (Level 3). Seek challenges to reach Sharing (Level 4) and beyond.`;
         document.getElementById('next-steps').textContent = nextSteps;
     });
 
@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const labelX = centerX + Math.cos(labelAngle) * labelRadius;
                 const labelY = centerY + Math.sin(labelAngle) * labelRadius;
                 masteryCtx.fillStyle = '#333';
-                masteryCtx.font = `${Math.max(10, 12)}px Arial`;
+                masteryCtx.font = `${Math.max(8, 10 * scaleFactor)}px Arial`; // Smaller label text
                 masteryCtx.textAlign = 'center';
                 masteryCtx.textBaseline = 'middle';
                 masteryCtx.fillText(timeLabels[time], labelX, labelY);
@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const levelLabelX = centerX + Math.cos(labelAngle) * levelLabelRadius;
             const levelLabelY = centerY + Math.sin(labelAngle) * levelLabelRadius;
             masteryCtx.fillStyle = '#333';
-            masteryCtx.font = `${Math.max(8, 12)}px Arial`;
+            masteryCtx.font = `${Math.max(6, 8 * scaleFactor)}px Arial`; // Smaller label text
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
             masteryCtx.fillText(`Level ${i + 1}`, levelLabelX, levelLabelY);

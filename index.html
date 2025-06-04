@@ -49,18 +49,18 @@
     <div class="container">
         <h1>Mastery Signature</h1>
         <div id="intro-section">
-            <p>Welcome to Mastery Signature! This tool helps you visualize your journey toward mastering any skill or discipline. Answer questions about your time and effort across seven levels of mastery, from initial exposure to innovation. Your unique "mastery signature" will be displayed as a blossom, with each petal representing a level of mastery. Petals with more time invested extend further from the center, the width at the base reflects the difficulty, and the time label is overlaid for clarity. Use this to identify areas to focus on!</p>
+            <p>Welcome to Mastery Signature! This tool helps you visualize your journey toward mastering a career, hobby, or passion. Your path unfolds across seven levels: starting with the "first kiss" of Initial Experience that draws you in (like Einstein’s compass or Jordan’s varsity cut), followed by General Education to learn what’s known, Experience through doing (gameplay for athletes), Sharing by teaching or speaking, Amalgamation to blend with other fields, Contribution to the discipline (e.g., an NBA player as commissioner), and the rare Innovation (e.g., Newton’s calculus). Your unique "Mastery Blossom" reflects this, with petals showing time and effort. Use it to pinpoint areas to grow!</p>
         </div>
         <section id="form-section">
             <form id="mastery-form">
                 <div class="question active">
                     <h2>What are you mastering?</h2>
-                    <input type="text" name="mastery-topic" placeholder="e.g., Python Programming, Painting, Martial Arts" required aria-label="Enter the skill or discipline you are mastering">
+                    <input type="text" name="mastery-topic" placeholder="e.g., Guitar, Python Programming, Basketball" required aria-label="Enter the skill or discipline you are mastering">
                 </div>
                 <div class="question">
-                    <h2>Level 1: Initial Exposure</h2>
-                    <p>How many hours per week do you engage in an experience within your discipline that is both engaging and challenging, providing motivation to keep going?</p>
-                    <select name="time1" required aria-label="Time spent on initial exposure">
+                    <h2>Level 1: Initial Experience (The First Kiss)</h2>
+                    <p>How many hours per week do you engage in an experience that first drew you in and keeps you motivated, like Einstein’s compass or Jordan’s varsity cut?</p>
+                    <select name="time1" required aria-label="Time spent on initial experience">
                         <option value="">Select an option</option>
                         <option value="0">None</option>
                         <option value="1">Less than 1 hour</option>
@@ -72,7 +72,7 @@
                         <option value="80">60+ hours</option>
                     </select>
                     <p>Difficulty (1-5, where 5 is very challenging but rewarding):</p>
-                    <select name="diff1" required aria-label="Difficulty of initial exposure">
+                    <select name="diff1" required aria-label="Difficulty of initial experience">
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
@@ -81,9 +81,9 @@
                     </select>
                 </div>
                 <div class="question">
-                    <h2>Level 2: Learning Known Knowledge</h2>
-                    <p>How much time have you spent learning what is already known about a topic within your discipline?</p>
-                    <select name="time2" required aria-label="Time spent learning known knowledge">
+                    <h2>Level 2: General Education</h2>
+                    <p>How much time have you spent learning what is already known about your discipline?</p>
+                    <select name="time2" required aria-label="Time spent on general education">
                         <option value="">Select an option</option>
                         <option value="0">None</option>
                         <option value="1">Hours</option>
@@ -95,7 +95,7 @@
                         <option value="500">5+ Years</option>
                     </select>
                     <p>Difficulty (1-5, where 5 is very challenging but rewarding):</p>
-                    <select name="diff2" required aria-label="Difficulty of learning known knowledge">
+                    <select name="diff2" required aria-label="Difficulty of general education">
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
@@ -104,9 +104,9 @@
                     </select>
                 </div>
                 <div class="question">
-                    <h2>Level 3: Active Application</h2>
-                    <p>How much time have you dedicated to actively applying your knowledge within your discipline?</p>
-                    <select name="time3" required aria-label="Time spent on active application">
+                    <h2>Level 3: Experience (Doing)</h2>
+                    <p>How much time have you dedicated to doing—volunteering, interning, work, or gameplay (for athletes) within your discipline?</p>
+                    <select name="time3" required aria-label="Time spent on experience">
                         <option value="">Select an option</option>
                         <option value="0">None</option>
                         <option value="1">Hours</option>
@@ -118,7 +118,7 @@
                         <option value="500">5+ Years</option>
                     </select>
                     <p>Difficulty (1-5, where 5 is very challenging but rewarding):</p>
-                    <select name="diff3" required aria-label="Difficulty of active application">
+                    <select name="diff3" required aria-label="Difficulty of experience">
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
@@ -127,9 +127,9 @@
                     </select>
                 </div>
                 <div class="question">
-                    <h2>Level 4: Reflection</h2>
-                    <p>How much time have you spent reflecting on your experiences and learning within your discipline?</p>
-                    <select name="time4" required aria-label="Time spent on reflection">
+                    <h2>Level 4: Sharing</h2>
+                    <p>How much time have you spent sharing through public speaking, tutoring, teaching, or informal discussions within your discipline?</p>
+                    <select name="time4" required aria-label="Time spent on sharing">
                         <option value="">Select an option</option>
                         <option value="0">None</option>
                         <option value="1">Hours</option>
@@ -141,7 +141,7 @@
                         <option value="500">5+ Years</option>
                     </select>
                     <p>Difficulty (1-5, where 5 is very challenging but rewarding):</p>
-                    <select name="diff4" required aria-label="Difficulty of reflection">
+                    <select name="diff4" required aria-label="Difficulty of sharing">
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
@@ -150,9 +150,9 @@
                     </select>
                 </div>
                 <div class="question">
-                    <h2>Level 5: Integration</h2>
-                    <p>How much time have you spent integrating your knowledge and skills across different areas within your discipline?</p>
-                    <select name="time5" required aria-label="Time spent on integration">
+                    <h2>Level 5: Amalgamation</h2>
+                    <p>How much time have you spent blending your discipline with other fields to explore variations or create something new?</p>
+                    <select name="time5" required aria-label="Time spent on amalgamation">
                         <option value="">Select an option</option>
                         <option value="0">None</option>
                         <option value="1">Hours</option>
@@ -164,7 +164,7 @@
                         <option value="500">5+ Years</option>
                     </select>
                     <p>Difficulty (1-5, where 5 is very challenging but rewarding):</p>
-                    <select name="diff5" required aria-label="Difficulty of integration">
+                    <select name="diff5" required aria-label="Difficulty of amalgamation">
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
@@ -174,7 +174,7 @@
                 </div>
                 <div class="question">
                     <h2>Level 6: Contribution</h2>
-                    <p>How much time have you devoted to contributing to your discipline, whether through teaching, mentoring, or creating new work?</p>
+                    <p>How much time have you devoted to contributing to your discipline, like publications or titles (e.g., an NBA player as commissioner)?</p>
                     <select name="time6" required aria-label="Time spent on contribution">
                         <option value="">Select an option</option>
                         <option value="0">None</option>
@@ -196,8 +196,8 @@
                     </select>
                 </div>
                 <div class="question">
-                    <h2>Level 7: Innovation</h2>
-                    <p>How much time have you spent creating something new within your discipline?</p>
+                    <h2>Level 7: Innovation (The Rare Newton Moment)</h2>
+                    <p>How much time have you spent creating something new, like Newton’s calculus, born from necessity or levels 5/6?</p>
                     <select name="time7" required aria-label="Time spent on innovation">
                         <option value="">Select an option</option>
                         <option value="0">None</option>
@@ -232,7 +232,7 @@
             <p>You are mastering: <strong id="result-topic"></strong></p>
             <p>Mastery Progress Score (1-7): <strong id="result-level"></strong></p>
             <p>Classification: <strong id="result-tier"></strong></p>
-            <p>Your mastery signature is visualized as a blossom, with each petal representing a level of mastery. Petals with more time invested extend further from the center, the width at the base reflects the difficulty, and the overlaid time label indicates the specific time range. Shorter petals indicate areas to focus on in your mastery journey.</p>
+            <p>Your mastery signature is a blossom, with each petal representing a level: the "first kiss" of Initial Experience, General Education, Experience (doing), Sharing, Amalgamation, Contribution, and the rare Innovation (e.g., Newton’s calculus). Petals show time invested, width reflects difficulty, and time labels highlight your effort. Shorter petals signal areas to focus on.</p>
             <canvas id="mastery-canvas" width="500" height="500"></canvas>
             <div class="canvas-actions">
                 <button id="download-btn">Download Signature</button>
@@ -240,7 +240,7 @@
                 <button id="restart-btn">Start Over</button>
             </div>
             <h3>Understanding Your Mastery Progress Score</h3>
-            <p>The Mastery Progress Score (1-7) reflects your overall progress across the seven levels of mastery. It is calculated by averaging the time you've spent on each level (excluding levels with no time invested) and mapping this average to a 1-7 scale. A score of 1 indicates early stages (e.g., hours to days of engagement), while a score of 7 signifies extensive dedication (e.g., 5+ years across multiple levels). This score helps you gauge your current stage in your mastery journey and identify how balanced your efforts are across different levels.</p>
+            <p>The Mastery Progress Score (1-7) reflects your journey across these levels. It’s calculated by averaging time spent (excluding zero values) and mapping it to a 1-7 scale: 1 for early engagement (hours to days), up to 7 for extensive dedication (5+ years). This shows your stage and balance, guiding you toward growth.</p>
             <h3>Future Projections</h3>
             <p>Based on your current progress, here’s where you could be with consistent effort:</p>
             <ul>
