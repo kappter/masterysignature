@@ -16,32 +16,21 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentQuestion = 0;
     let answers = { times: [], difficulties: [] };
 
-    // Gradient color pairs for each level
-    const gradientColors = [
-        ['#F5F5DC', '#D2B48C'], // Level 1: Sandy Beige to Light Tan
-        ['#E2725B', '#F4A460'], // Level 2: Terracotta to Soft Coral
-        ['#808000', '#9ACD32'], // Level 3: Olive Green to Sage Green
-        ['#8B4513', '#A0522D'], // Level 4: Earth Brown to Warm Brown
-        ['#228B22', '#3CB371'], // Level 5: Forest Green to Moss Green
-        ['#708090', '#4682B4'], // Level 6: Stone Gray to Slate Gray
-        ['#5C4033', '#6F4E37']  // Level 7: Deep Clay to Rich Umber
-    ];
-
-    // Time value to label mapping
-    const timeLabels = {
-        0: 'None',
-        1: 'Hours',
-        5: 'Days',
-        20: 'Weeks',
-        50: 'Months',
-        100: '1-2 Years',
-        200: '2-5 Years',
-        500: '5+ Years',
-        10: '5-10 hours',
-        40: '20-40 hours',
-        60: '40-60 hours',
-        80: '60+ hours'
-    };
+    // Function to generate shades from a base color
+    function generateShades(baseColor) {
+        const r = parseInt(baseColor.slice(1, 3), 16);
+        const g = parseInt(baseColor.slice(3, 5), 16);
+        const b = parseInt(baseColor.slice(5, 7), 16);
+        const shades = [];
+        for (let i = 0; i < 7; i++) {
+            const factor = 1 - (i * 0.1); // Darker shades as level increases
+            const rShade = Math.round(r * factor);
+            const gShade = Math.round(g * factor);
+            const bShade = Math.round(b * factor);
+            shades.push([`#${rShade.toString(16).padStart(2, '0')}${gShade.toString(16).padStart(2, '0')}${bShade.toString(16).padStart(2, '0')}`, baseColor]);
+        }
+        return shades;
+    }
 
     // Pagination logic
     const showQuestion = (index) => {
@@ -119,7 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         previewCtx.closePath();
 
-        // Apply gradient fill
+        // Apply gradient fill with dynamic shades
+        const baseColor = form.querySelector('input[name="passion-color"]').value || '#2C69CE';
+        const gradientColors = generateShades(baseColor);
         for (let i = 0; i < 7; i++) {
             if (i >= answers.times.length || answers.times[i] === 0) continue;
             const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
@@ -186,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const formData = new FormData(form);
         const topic = formData.get('mastery-topic');
+        const passionColor = formData.get('passion-color');
         const times = [
             parseInt(formData.get('time1')),
             parseInt(formData.get('time2')),
@@ -226,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const segmentProportions = times.map(val => (val / totalPoints) * 2 * Math.PI);
 
         // Draw the final mastery symbol
-        drawMasterySymbol(masteryProgressScore, segmentProportions, difficulties, hasHigherLevels, times, topic);
+        drawMasterySymbol(masteryProgressScore, segmentProportions, difficulties, hasHigherLevels, times, topic, passionColor);
 
         // Future projections
         const projectLevel = (years) => {
@@ -249,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Function to draw the final mastery symbol as a Mastery Blossom
-    function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times, topic) {
+    function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times, topic, passionColor) {
         const width = masteryCanvas.width;
         const height = masteryCanvas.height;
         masteryCtx.clearRect(0, 0, width, height);
@@ -292,7 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         masteryCtx.closePath();
 
-        // Apply gradient fill for each petal
+        // Apply gradient fill with dynamic shades
+        const gradientColors = generateShades(passionColor || '#2C69CE');
         for (let i = 0; i < 7; i++) {
             const time = times[i];
             const difficulty = difficulties[i];
