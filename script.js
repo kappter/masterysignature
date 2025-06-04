@@ -47,26 +47,28 @@ document.addEventListener('DOMContentLoaded', () => {
         return calculateLuminance(hexColor) > 0.5 ? '#333' : '#fff';
     }
 
-    // Function to generate shades based on time (lighter for more time)
-    function generateShades(baseColor, times) {
+    // Function to generate shades based on time (lighter for more time) and difficulty (darker for higher difficulty)
+    function generateShades(baseColor, times, difficulties) {
         const r = parseInt(baseColor.slice(1, 3), 16);
         const g = parseInt(baseColor.slice(3, 5), 16);
         const b = parseInt(baseColor.slice(5, 7), 16);
         const maxTime = Math.max(...times.filter(t => t > 0), 1);
         const shades = [];
         for (let i = 0; i < 7; i++) {
-            const time = times[i];
+            const time = times[i] || 0;
+            const difficulty = difficulties[i] || 1;
             if (time === 0) {
                 shades.push([baseColor, baseColor]); // Default for zero time
                 continue;
             }
             const lightnessFactor = time / maxTime; // 0 to 1, higher time = lighter
-            const rShade = Math.round(r + (255 - r) * lightnessFactor);
-            const gShade = Math.round(g + (255 - g) * lightnessFactor);
-            const bShade = Math.round(b + (255 - b) * lightnessFactor);
-            const darkerR = Math.round(r * (1 - lightnessFactor * 0.3));
-            const darkerG = Math.round(g * (1 - lightnessFactor * 0.3));
-            const darkerB = Math.round(b * (1 - lightnessFactor * 0.3));
+            const darknessFactor = (difficulty - 1) / 4; // 0 to 1, higher difficulty = darker
+            const rShade = Math.round(r + (255 - r) * lightnessFactor * (1 - darknessFactor * 0.3));
+            const gShade = Math.round(g + (255 - g) * lightnessFactor * (1 - darknessFactor * 0.3));
+            const bShade = Math.round(b + (255 - b) * lightnessFactor * (1 - darknessFactor * 0.3));
+            const darkerR = Math.round(r * (1 - lightnessFactor * 0.3 + darknessFactor * 0.3));
+            const darkerG = Math.round(g * (1 - lightnessFactor * 0.3 + darknessFactor * 0.3));
+            const darkerB = Math.round(b * (1 - lightnessFactor * 0.3 + darknessFactor * 0.3));
             shades.push([
                 `#${darkerR.toString(16).padStart(2, '0')}${darkerG.toString(16).padStart(2, '0')}${darkerB.toString(16).padStart(2, '0')}`,
                 `#${rShade.toString(16).padStart(2, '0')}${gShade.toString(16).padStart(2, '0')}${bShade.toString(16).padStart(2, '0')}`
@@ -154,8 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Apply gradient fill with dynamic shades
         const baseColor = form.querySelector('input[name="passion-color"]').value || '#2C69CE';
         const times = Array(7).fill(0);
-        for (let i = 0; i < answers.times.length; i++) times[i] = answers.times[i];
-        const gradientColors = generateShades(baseColor, times);
+        const diffs = Array(7).fill(1);
+        for (let i = 0; i < answers.times.length; i++) {
+            times[i] = answers.times[i];
+            diffs[i] = answers.difficulties[i];
+        }
+        const gradientColors = generateShades(baseColor, times, diffs);
         const textColor = getContrastColor(baseColor);
 
         for (let i = 0; i < 7; i++) {
@@ -243,8 +249,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check for ample time past Level 4
         const ampleTimePastLevel4 = times.slice(4).reduce((sum, val) => sum + val, 0) > 100;
 
-        // Generate shades based on time
-        const gradientColors = generateShades(passionColor || '#2C69CE', times);
+        // Generate shades based on time and difficulty
+        const gradientColors = generateShades(passionColor || '#2C69CE', times, difficulties);
         const textColor = getContrastColor(passionColor || '#2C69CE');
 
         // Draw the connected blossom shape
