@@ -11,12 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadBtn = document.getElementById('download-btn');
     const copyBtn = document.getElementById('copy-btn');
     const restartBtn = document.getElementById('restart-btn');
+    const textColorPicker = document.getElementById('text-color-picker');
     const previewCtx = previewCanvas.getContext('2d');
     const masteryCtx = masteryCanvas.getContext('2d');
     const tooltip = document.getElementById('tooltip');
     let currentQuestion = 0;
     let answers = { times: [], difficulties: [] };
     let petalRegions = []; // Store petal regions for hover detection
+    let resultData = {}; // Store form results for redrawing
 
     // Time value to label mapping
     const timeLabels = {
@@ -33,19 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
         60: '40-60 hours',
         80: '60+ hours'
     };
-
-    // Calculate luminance to determine text contrast
-    function calculateLuminance(hexColor) {
-        const r = parseInt(hexColor.slice(1, 3), 16);
-        const g = parseInt(hexColor.slice(3, 5), 16);
-        const b = parseInt(hexColor.slice(5, 7), 16);
-        // Relative luminance formula (simplified)
-        return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    }
-
-    function getContrastColor(hexColor) {
-        return calculateLuminance(hexColor) > 0.5 ? '#333' : '#fff';
-    }
 
     // Function to generate shades based on time (lighter for more time) and difficulty (darker for higher difficulty)
     function generateShades(baseColor, times, difficulties) {
@@ -162,7 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
             diffs[i] = answers.difficulties[i];
         }
         const gradientColors = generateShades(baseColor, times, diffs);
-        const textColor = getContrastColor(baseColor);
 
         for (let i = 0; i < 7; i++) {
             if (i >= answers.times.length || answers.times[i] === 0) continue;
@@ -196,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
             previewCtx.stroke();
         }
 
-        // Overlay time labels
+        // Overlay time labels with default color (black for preview)
         for (let i = 0; i < answers.times.length; i++) {
             if (answers.times[i] === 0) continue;
             const time = answers.times[i];
@@ -205,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const radius = baseRadius + (time * scaleFactor) + (difficulty * 5 * scaleFactor);
             const labelX = centerX + Math.cos(angle) * (radius + 20 * scaleFactor);
             const labelY = centerY + Math.sin(angle) * (radius + 20 * scaleFactor);
-            previewCtx.fillStyle = textColor;
+            previewCtx.fillStyle = '#333'; // Default black for preview
             previewCtx.font = '12px Arial';
             previewCtx.textAlign = 'center';
             previewCtx.textBaseline = 'middle';
@@ -226,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Function to draw the final mastery symbol as a Mastery Blossom
-    function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times, topic, passionColor) {
+    function drawMasterySymbol(level, segmentProportions, difficulties, hasHigherLevels, times, topic, passionColor, textColor) {
         const width = masteryCanvas.width;
         const height = masteryCanvas.height;
         masteryCtx.clearRect(0, 0, width, height);
@@ -251,7 +239,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Generate shades based on time and difficulty
         const gradientColors = generateShades(passionColor || '#2C69CE', times, difficulties);
-        const textColor = getContrastColor(passionColor || '#2C69CE');
 
         // Draw the connected blossom shape
         masteryCtx.beginPath();
@@ -341,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
             masteryCtx.stroke();
         }
 
-        // Overlay time and level labels within bounds
+        // Overlay time and level labels within bounds using selected text color
         for (let i = 0; i < 7; i++) {
             const time = times[i];
             const difficulty = difficulties[i];
@@ -355,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const labelRadius = Math.min(radius * 0.7, targetRadius - 20);
                 const labelX = centerX + Math.cos(labelAngle) * labelRadius;
                 const labelY = centerY + Math.sin(labelAngle) * labelRadius;
-                masteryCtx.fillStyle = textColor;
+                masteryCtx.fillStyle = textColor || '#333333';
                 masteryCtx.font = `${Math.max(8, 10 * scaleFactor)}px Arial`;
                 masteryCtx.textAlign = 'center';
                 masteryCtx.textBaseline = 'middle';
@@ -366,14 +353,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const levelLabelRadius = Math.max(baseRadius * 1.2, radius * 0.3);
             const levelLabelX = centerX + Math.cos(labelAngle) * levelLabelRadius;
             const levelLabelY = centerY + Math.sin(labelAngle) * levelLabelRadius;
-            masteryCtx.fillStyle = textColor;
+            masteryCtx.fillStyle = textColor || '#333333';
             masteryCtx.font = `${Math.max(6, 8 * scaleFactor)}px Arial`;
             masteryCtx.textAlign = 'center';
             masteryCtx.textBaseline = 'middle';
             masteryCtx.fillText(`Level ${i + 1}`, levelLabelX, levelLabelY);
         }
 
-        // Add title at the top with high contrast
+        // Add title at the top with selected text color
         const titleText = `${topic} Mastery Progress: ${level}`;
         masteryCtx.font = 'bold 24px Georgia, Arial, sans-serif';
         masteryCtx.textAlign = 'center';
@@ -381,12 +368,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const titleX = centerX;
         const titleY = centerY - targetRadius - 10;
 
-        // Add shadow for contrast
-        masteryCtx.shadowColor = calculateLuminance(passionColor || '#2C69CE') > 0.5 ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.8)';
+        // Add shadow for better visibility
+        masteryCtx.shadowColor = 'rgba(0, 0, 0, 0.5)';
         masteryCtx.shadowBlur = 5;
         masteryCtx.shadowOffsetX = 2;
         masteryCtx.shadowOffsetY = 2;
-        masteryCtx.fillStyle = textColor;
+        masteryCtx.fillStyle = textColor || '#333333';
         masteryCtx.fillText(titleText, titleX, titleY);
 
         // Reset shadow
@@ -430,6 +417,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const hasHigherLevels = times.slice(3).some(time => time > 0);
         const tier = (!hasHigherLevels) ? 'Tier One Candidate' : 'Advanced Learner';
 
+        // Store result data for redrawing
+        resultData = {
+            level: masteryProgressScore,
+            segmentProportions: times.map(val => (val / (times.reduce((sum, v) => sum + v, 0) || 1)) * 2 * Math.PI),
+            difficulties,
+            hasHigherLevels,
+            times,
+            topic,
+            passionColor
+        };
+
         // Display results
         formSection.style.display = 'none';
         resultSection.style.display = 'block';
@@ -437,12 +435,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('result-level').textContent = masteryProgressScore;
         document.getElementById('result-tier').textContent = tier;
 
-        // Calculate segment proportions (not used directly)
-        const totalPoints = times.reduce((sum, val) => sum + val, 0) || 1;
-        const segmentProportions = times.map(val => (val / totalPoints) * 2 * Math.PI);
-
-        // Draw the final mastery symbol
-        drawMasterySymbol(masteryProgressScore, segmentProportions, difficulties, hasHigherLevels, times, topic, passionColor);
+        // Draw the final mastery symbol with initial text color
+        drawMasterySymbol(
+            resultData.level,
+            resultData.segmentProportions,
+            resultData.difficulties,
+            resultData.hasHigherLevels,
+            resultData.times,
+            resultData.topic,
+            resultData.passionColor,
+            textColorPicker.value
+        );
 
         // Future projections
         const projectLevel = (years) => {
@@ -462,6 +465,22 @@ document.addEventListener('DOMContentLoaded', () => {
             ? `As an Advanced Learner, deepen your Contribution (Level 6) through publications or titles, or aim for Innovation (Level 7, like Newton’s calculus). Consider a project that pushes the boundaries of ${topic}.`
             : `As a Tier One Candidate, build your foundation with General Education (Level 2) and Experience (Level 3). Seek challenges to reach Extending the Passion (Level 4) by sharing your love for ${topic}.`;
         document.getElementById('next-steps').textContent = nextSteps;
+    });
+
+    // Redraw canvas when text color changes
+    textColorPicker.addEventListener('input', () => {
+        if (resultData.level !== undefined) {
+            drawMasterySymbol(
+                resultData.level,
+                resultData.segmentProportions,
+                resultData.difficulties,
+                resultData.hasHigherLevels,
+                resultData.times,
+                resultData.topic,
+                resultData.passionColor,
+                textColorPicker.value
+            );
+        }
     });
 
     // Tooltip handling for smaller petals
@@ -522,6 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
     restartBtn.addEventListener('click', () => {
         form.reset();
         answers = { times: [], difficulties: [] };
+        resultData = {};
         currentQuestion = 0;
         formSection.style.display = 'block';
         resultSection.style.display = 'none';
