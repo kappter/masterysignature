@@ -17,9 +17,9 @@ This tool is built on a narrative of growth, inspired by iconic moments and cont
 1. **Initial Experience (The First Kiss)**: The spark that draws you in—hours per week of engaging, motivating experiences (e.g., Einstein’s compass, Jordan’s varsity cut).
 2. **General Education**: Time spent learning established knowledge about your discipline.
 3. **Experience (Doing)**: Dedicated effort in doing—volunteering, interning, work, or gameplay (for athletes, practice is Level 2, gameplay is Level 3).
-4. **Sharing**: Time invested in teaching, tutoring, public speaking, or informal sharing.
-5. **Amalgamation**: Effort to blend your discipline with other fields, exploring variations or new ideas.
-6. **Contribution**: Devotion to the discipline itself, through publications or roles (e.g., an NBA player becoming commissioner).
+4. **Extending the Passion: Sharing the Love**: Time invested in teaching, tutoring, public speaking, or helping others grow in your discipline.
+5. **Amalgamation: Concept Pairing**: Effort to blend your discipline with other fields—like a chef exploring global cuisines—to create something new.
+6. **Contribution**: Devotion to the discipline through publications or titles (e.g., an NBA player becoming commissioner).
 7. **Innovation (The Rare Newton Moment)**: The rare creation of something new, often from Levels 5 or 6 (e.g., Newton’s calculus out of necessity).
 
 Your Mastery Blossom reflects this journey, with shorter petals highlighting areas to focus on.

@@ -243,8 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Next steps
         const nextSteps = hasHigherLevels
-            ? `As an Advanced Learner, deepen your Contribution (Level 6) or aim for Innovation (Level 7, like Newton’s calculus). Consider mentoring or a new project in ${topic}.`
-            : `As a Tier One Candidate, build your foundation with General Education (Level 2) and Experience (Level 3). Seek challenges to reach Sharing (Level 4) and beyond.`;
+            ? `As an Advanced Learner, deepen your Contribution (Level 6) through publications or titles, or aim for Innovation (Level 7, like Newton’s calculus). Consider a project that pushes the boundaries of ${topic}.`
+            : `As a Tier One Candidate, build your foundation with General Education (Level 2) and Experience (Level 3). Seek challenges to reach Extending the Passion (Level 4) by sharing your love for ${topic}.`;
         document.getElementById('next-steps').textContent = nextSteps;
     });
 
