@@ -36,34 +36,75 @@ document.addEventListener('DOMContentLoaded', () => {
         80: '60+ hours'
     };
 
-    // Function to generate shades based on time (lighter for more time) and difficulty (darker for higher difficulty)
-    function generateShades(baseColor, times, difficulties) {
-        const r = parseInt(baseColor.slice(1, 3), 16);
-        const g = parseInt(baseColor.slice(3, 5), 16);
-        const b = parseInt(baseColor.slice(5, 7), 16);
-        const maxTime = Math.max(...times.filter(t => t > 0), 1);
-        const shades = [];
-        for (let i = 0; i < 7; i++) {
-            const time = times[i] || 0;
-            const difficulty = difficulties[i] || 1;
-            if (time === 0) {
-                shades.push([baseColor, baseColor]); // Default for zero time
-                continue;
+    // Function to convert RGB to HSL and adjust hue
+    function rgbToHsl(r, g, b) {
+        r /= 255; g /= 255; b /= 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+
+        if (max === min) {
+            h = s = 0; // achromatic
+        } else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
             }
-            const lightnessFactor = time / maxTime; // 0 to 1, higher time = lighter
-            const darknessFactor = (difficulty - 1) / 4; // 0 to 1, higher difficulty = darker
-            const rShade = Math.round(r + (255 - r) * lightnessFactor * (1 - darknessFactor * 0.3));
-            const gShade = Math.round(g + (255 - g) * lightnessFactor * (1 - darknessFactor * 0.3));
-            const bShade = Math.round(b + (255 - b) * lightnessFactor * (1 - darknessFactor * 0.3));
-            const darkerR = Math.round(r * (1 - lightnessFactor * 0.3 + darknessFactor * 0.3));
-            const darkerG = Math.round(g * (1 - lightnessFactor * 0.3 + darknessFactor * 0.3));
-            const darkerB = Math.round(b * (1 - lightnessFactor * 0.3 + darknessFactor * 0.3));
-            shades.push([
-                `#${darkerR.toString(16).padStart(2, '0')}${darkerG.toString(16).padStart(2, '0')}${darkerB.toString(16).padStart(2, '0')}`,
-                `#${rShade.toString(16).padStart(2, '0')}${gShade.toString(16).padStart(2, '0')}${bShade.toString(16).padStart(2, '0')}`
-            ]);
+            h /= 6;
         }
-        return shades;
+
+        return [h * 360, s * 100, l * 100];
+    }
+
+    function hslToRgb(h, s, l) {
+        h /= 360; s /= 100; l /= 100;
+        let r, g, b;
+        if (s === 0) {
+            r = g = b = l; // achromatic
+        } else {
+            const hue2rgb = (p, q, t) => {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1/6) return p + (q - p) * 6 * t;
+                if (t < 1/2) return q;
+                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            };
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
+        }
+        return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+    }
+
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? [
+            parseInt(result[1], 16),
+            parseInt(result[2], 16),
+            parseInt(result[3], 16)
+        ] : null;
+    }
+
+    function rgbToHex(r, g, b) {
+        return `#${[r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')}`;
+    }
+
+    // Function to generate analogous colors
+    function generateAnalogousColors(baseColor) {
+        const rgb = hexToRgb(baseColor);
+        const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+        const colors = [];
+        for (let i = -2; i <= 2; i++) {
+            const newH = (h + i * 30 + 360) % 360; // Shift hue by ±30 degrees
+            const newRgb = hslToRgb(newH, s, l);
+            colors.push(rgbToHex(newRgb[0], newRgb[1], newRgb[2]));
+        }
+        return colors; // Returns 5 colors: -60, -30, 0, +30, +60 degrees
     }
 
     // Pagination logic
@@ -142,15 +183,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         previewCtx.closePath();
 
-        // Apply gradient fill with dynamic shades
+        // Apply analogous colors with dynamic sizes
         const baseColor = form.querySelector('input[name="passion-color"]').value || '#2C69CE';
+        const analogousColors = generateAnalogousColors(baseColor);
         const times = Array(7).fill(0);
         const diffs = Array(7).fill(1);
         for (let i = 0; i < answers.times.length; i++) {
             times[i] = answers.times[i];
             diffs[i] = answers.difficulties[i];
         }
-        const gradientColors = generateShades(baseColor, times, diffs);
 
         for (let i = 0; i < 7; i++) {
             if (i >= answers.times.length || answers.times[i] === 0) continue;
@@ -158,14 +199,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
             const time = answers.times[i];
             const radius = baseRadius + (time * scaleFactor);
+            const colorIndex = i % analogousColors.length;
 
             const gradient = previewCtx.createLinearGradient(
                 centerX, centerY,
                 centerX + Math.cos((angleStart + angleEnd) / 2) * radius,
                 centerY + Math.sin((angleStart + angleEnd) / 2) * radius
             );
-            gradient.addColorStop(0, gradientColors[i][0]);
-            gradient.addColorStop(1, gradientColors[i][1]);
+            gradient.addColorStop(0, analogousColors[colorIndex]);
+            gradient.addColorStop(1, analogousColors[colorIndex]); // Solid color for simplicity
 
             previewCtx.beginPath();
             previewCtx.moveTo(centerX, centerY);
@@ -237,8 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check for ample time past Level 4
         const ampleTimePastLevel4 = times.slice(4).reduce((sum, val) => sum + val, 0) > 100;
 
-        // Generate shades based on time and difficulty
-        const gradientColors = generateShades(passionColor || '#2C69CE', times, difficulties);
+        // Generate analogous colors based on passion color
+        const analogousColors = generateAnalogousColors(passionColor || '#2C69CE');
 
         // Draw the connected blossom shape
         masteryCtx.beginPath();
@@ -261,21 +303,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         masteryCtx.closePath();
 
-        // Apply gradient fill for each petal and store regions
+        // Apply analogous colors for each petal and store regions
         for (let i = 0; i < 7; i++) {
             const time = times[i];
             const difficulty = difficulties[i];
             const radius = time > 0 ? baseRadius + (time * scaleFactor) : baseRadius;
             const angleStart = (i / 7) * 2 * Math.PI - Math.PI / 2;
             const angleEnd = ((i + 1) / 7) * 2 * Math.PI - Math.PI / 2;
+            const colorIndex = i % analogousColors.length;
 
             const gradient = masteryCtx.createLinearGradient(
                 centerX, centerY,
                 centerX + Math.cos((angleStart + angleEnd) / 2) * radius,
                 centerY + Math.sin((angleStart + angleEnd) / 2) * radius
             );
-            gradient.addColorStop(0, gradientColors[i][0]);
-            gradient.addColorStop(1, gradientColors[i][1]);
+            gradient.addColorStop(0, analogousColors[colorIndex]);
+            gradient.addColorStop(1, analogousColors[colorIndex]); // Solid color for simplicity
 
             masteryCtx.beginPath();
             masteryCtx.moveTo(centerX, centerY);
